@@ -39,7 +39,9 @@ export const storage = getStorage(app);
 // yalnızca bu maillere açılmalı). Buradaki liste yalnızca arayüz kontrolüdür.
 export const ADMIN_EMAILS = [
     // "ornek@gmail.com",
-    "osmangundemir1@gmail.com"
+    "osmangundemir1@gmail.com",
+    "ab.sametdundar@gmail.com",
+    "abdsametdundar84@gmail.com"
 ];
 
 // Ürün koleksiyonunun adı (Firestore)
