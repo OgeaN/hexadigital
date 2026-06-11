@@ -1,0 +1,8 @@
+[
+  { "name": "HexaBoard Pro",  "description": "Profesyonel geliştirici mekanik klavyesi", "price": 1499, "currency": "TL", "imageUrl": "", "visible": true },
+  { "name": "Hexa Mouse X",   "description": "Ergonomik kablosuz mouse",                "price": 499,  "currency": "TL", "imageUrl": "", "visible": true },
+  { "name": "Hexa Hub USB-C", "description": "7-in-1 USB-C çoklayıcı adaptör",          "price": 799,  "currency": "TL", "imageUrl": "", "visible": true },
+  { "name": "Hexa Stand",     "description": "Alüminyum ayarlanabilir laptop standı",   "price": 349,  "currency": "TL", "imageUrl": "", "visible": true },
+  { "name": "Hexa Cam 4K",    "description": "4K çözünürlüklü web kamerası",            "price": 1199, "currency": "TL", "imageUrl": "", "visible": false },
+  { "name": "Hexa Pad XL",    "description": "XL boyut kaymaz dokuma mouse pad",        "price": 199,  "currency": "TL", "imageUrl": "", "visible": true }
+]

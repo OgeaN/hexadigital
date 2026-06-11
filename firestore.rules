@@ -1,0 +1,45 @@
+rules_version = '2';
+
+// ===========================================================================
+// Firestore Güvenlik Kuralları — Firebase Konsol > Firestore Database > Rules
+// içine bu kuralları KOPYALAYIN ve "Yayınla" deyin.
+//
+// >>> ÖNEMLİ: Aşağıdaki adminEmails() listesine yetkili admin maillerinizi
+//     yazın. js/firebase-config.js içindeki ADMIN_EMAILS ile AYNI olmalı.
+//     Gerçek güvenlik BURADA sağlanır; istemci tarafı kontrol yalnızca arayüz içindir.
+// ===========================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function adminEmails() {
+      // >>> BURAYA admin maillerinizi yazın <<<
+      return [
+        // "ornek@gmail.com"
+      ];
+    }
+
+    function isAdmin() {
+      return request.auth != null
+          && request.auth.token.email in adminEmails();
+    }
+
+    match /products/{productId} {
+      // Müşteriler ürünleri okuyabilir (giriş gerekmez)
+      allow read: if true;
+      // Yalnızca yetkili adminler yazabilir / silebilir
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /orders/{orderId} {
+      // Sipariş linkine (key'e) sahip herkes okuyabilir.
+      // Key rastgele/tahmin edilemez olduğu için pratikte sadece link sahibi erişir.
+      allow read: if true;
+      // Müşteriler sipariş oluşturabilir (giriş yok). Temel doğrulama:
+      // items dizi, total sayı olmalı; var olan sipariş değiştirilemez/silinemez.
+      allow create: if request.resource.data.items is list
+                    && request.resource.data.total is number;
+      allow update, delete: if isAdmin();
+    }
+  }
+}

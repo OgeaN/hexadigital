@@ -1,0 +1,41 @@
+rules_version = '2';
+
+// ===========================================================================
+// Firebase Storage Güvenlik Kuralları
+// Firebase Konsol > Storage > Rules sekmesine bu kuralları KOPYALAYIN ve "Publish" deyin.
+//
+// >>> ÖNEMLİ: Aşağıdaki adminEmails() listesine yetkili admin maillerinizi yazın.
+//     js/firebase-config.js içindeki ADMIN_EMAILS ve firestore.rules ile AYNI olmalı.
+// ===========================================================================
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function adminEmails() {
+      // >>> BURAYA admin maillerinizi yazın (firestore.rules ile aynı) <<<
+      return [
+        // "ornek@gmail.com"
+      ];
+    }
+
+    function isAdmin() {
+      return request.auth != null
+          && request.auth.token.email in adminEmails();
+    }
+
+    // Ürün görselleri (admin panelinden yüklenir): products/...
+    match /products/{fileName} {
+      // Görseller mağazada herkese görünmeli → okuma açık
+      allow read: if true;
+      // Yalnızca yetkili admin yükleyebilir/silebilir + sadece görsel + max 5 MB
+      allow write: if isAdmin()
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    // Diğer tüm yollar kapalı
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
