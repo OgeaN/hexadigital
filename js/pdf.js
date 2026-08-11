@@ -109,10 +109,51 @@ async function fetchImageAsDataUrl(url) {
         const mime = fmt === "JPEG" ? "jpeg" : fmt.toLowerCase();
         return { dataUrl: `data:image/${mime};base64,${bytesToBase64(bytes)}`, fmt };
     } catch (err) {
-        // Genellikle CORS: sunucu Access-Control-Allow-Origin göndermiyor
-        console.warn("PDF görseli indirilemedi (CORS olabilir):", url, err.message);
+        // Buraya genellikle CORS yüzünden düşülür: sunucu başarılı yanıtta
+        // Access-Control-Allow-Origin göndermiyor (Firebase Storage'ın
+        // varsayılan durumu). Son çare olarak <img>+canvas ile deneriz.
+        const viaCanvas = await imageViaCanvas(url);
+        if (viaCanvas) return viaCanvas;
+
+        console.warn(
+            "PDF görseli indirilemedi (CORS). Firebase Storage bucket'ına CORS " +
+            "ayarı uygulanmalı — proje kökündeki cors.json ve KURULUM.md'ye bakın:",
+            url, err.message
+        );
+        corsBlocked = true;
         return null;
     }
+}
+
+// Bu PDF üretiminde CORS engeli görüldü mü? (kullanıcıyı uyarmak için)
+let corsBlocked = false;
+
+/**
+ * fetch CORS'a takıldığında son çare: görseli <img> ile yükleyip canvas'a çiz.
+ * NOT: Sunucu CORS başlığı göndermiyorsa canvas "kirlenir" (tainted) ve
+ * toDataURL güvenlik hatası verir — o durumda da null döner. Yani bu yalnızca
+ * crossOrigin ile servis edilen bazı kaynakları kurtarır, sihirli değnek değildir.
+ */
+function imageViaCanvas(url) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+            try {
+                const c = document.createElement("canvas");
+                c.width = img.naturalWidth;
+                c.height = img.naturalHeight;
+                c.getContext("2d").drawImage(img, 0, 0);
+                const dataUrl = c.toDataURL("image/jpeg", 0.92);
+                resolve({ dataUrl, fmt: "JPEG" });
+            } catch {
+                resolve(null);   // tainted canvas
+            }
+        };
+        img.onerror = () => resolve(null);
+        setTimeout(() => resolve(null), 10000);   // takılmasın
+        img.src = url;
+    });
 }
 
 /**
@@ -208,6 +249,7 @@ function drawImageCover(doc, img, boxX, boxY, boxW, boxH) {
  * @returns {Promise<{blob: Blob, doc: jsPDF, fileName: string}>}
  */
 export async function buildOrderPdf(items, opts = {}) {
+    corsBlocked = false;   // modül önbellekte kaldığı için her çağrıda sıfırla
     const cart = Array.isArray(items) ? items : [];
     const total = typeof opts.total === "number"
         ? opts.total
@@ -339,5 +381,6 @@ export async function buildOrderPdf(items, opts = {}) {
     const slug = opts.storeId || "hexadigital";
     const fileName = `${slug}-siparis-${Date.now()}.pdf`;
     const blob = doc.output("blob");
-    return { blob, doc, fileName };
+    // corsBlocked: çağıran taraf kullanıcıyı uyarabilsin diye dışarı verilir
+    return { blob, doc, fileName, corsBlocked };
 }

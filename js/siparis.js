@@ -148,13 +148,22 @@ btnPdf.addEventListener("click", async () => {
     try {
         // pdf.js'i (jsPDF CDN) ilk PDF indirme anında yükle
         const { buildOrderPdf } = await import("./pdf.js");
-        const { doc, fileName } = await buildOrderPdf(currentOrder.items, {
+        const { doc, fileName, corsBlocked } = await buildOrderPdf(currentOrder.items, {
             total: currentOrder.total,
             orderKey: currentKey,
             storeId: currentOrder.storeId || "",
             store: currentOrder.store || null
         });
         doc.save(fileName);
+
+        // Görseller CORS yüzünden inemediyse sessiz kalma — sorunu görünür kıl
+        if (corsBlocked) {
+            showStatus(
+                "PDF oluşturuldu, ancak ürün görselleri eklenemedi. " +
+                "Firebase Storage için CORS ayarı yapılmalı (yöneticiye bildirin).",
+                true
+            );
+        }
     } catch (err) {
         console.error("PDF üretilemedi:", err);
         alert("PDF oluşturulamadı: " + (err.message || ""));

@@ -55,6 +55,49 @@ export const ADMIN_EMAILS = [
    - **Storage → Rules** → `storage.rules` içeriğini yapıştır → **Publish**
    - Her ikisinde de süper admin maillerini doldurmayı unutmayın!
 
+6. **Storage CORS ayarı — PDF'e görsel gömmek için ZORUNLU** ⚠️
+
+   Firebase Storage varsayılan olarak CORS başlığı **göndermez**. Bu yüzden
+   sipariş PDF'i ürün görsellerini indiremez ve PDF **görselsiz** çıkar.
+   (Tarayıcı konsolunda `CORS Missing Allow Origin` hatası görürsünüz.)
+
+   Bu bir kod sorunu değildir; bucket ayarıdır ve **bir kez** yapılır.
+
+   **En kolay yol — Google Cloud Shell** (hiçbir şey kurmanız gerekmez):
+   1. <https://console.cloud.google.com/> → sağ üstteki **Cloud Shell** (`>_`) simgesine tıklayın
+   2. Açılan terminale şunu yapıştırın (repo kökündeki `cors.json` içeriğiyle aynı):
+
+   ```bash
+   cat > cors.json <<'EOF'
+   [
+     {
+       "origin": [
+         "https://ogean.github.io",
+         "http://localhost:5500",
+         "http://127.0.0.1:5500"
+       ],
+       "method": ["GET", "HEAD"],
+       "responseHeader": ["Content-Type", "Content-Length", "Content-Range", "Cache-Control"],
+       "maxAgeSeconds": 3600
+     }
+   ]
+   EOF
+
+   gcloud storage buckets update gs://hexadigital-cf3f2.firebasestorage.app --cors-file=cors.json
+   ```
+
+   3. Doğrulama — aşağıdaki komut `Access-Control-Allow-Origin` satırı göstermelidir:
+
+   ```bash
+   curl -sI -H "Origin: https://ogean.github.io" \
+     "https://firebasestorage.googleapis.com/v0/b/hexadigital-cf3f2.firebasestorage.app/o/<DOSYA_YOLU>?alt=media&token=<TOKEN>" \
+     | grep -i access-control-allow-origin
+   ```
+
+   > **Yeni bir alan adı eklerseniz** (özel domain vb.) `origin` listesine ekleyip
+   > komutu tekrar çalıştırın. Ayarı yapmadan da site ve sipariş akışı çalışır;
+   > yalnızca **PDF'teki görseller** eksik olur.
+
 > Firestore'da **hiçbir composite index gerekmez.** Sorgular tek eşitlik
 > filtresiyle yapılır, kalan süzme/sıralama JS tarafında yapılır.
 
