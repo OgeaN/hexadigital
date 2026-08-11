@@ -66,13 +66,17 @@
     background-image: none;
 }
 
+/* Logo kutuya TAM oturur: cover + padding YOK.
+   contain + koyu zemin + padding kombinasyonu, kendi arka planı olan
+   logolarda "kutu içinde kutu" görüntüsü yaratıyordu. */
 .store-card__logo {
-    width: 56px;
-    height: 56px;
+    width: 52px;
+    height: 52px;
     border-radius: 10px;
-    object-fit: contain;
-    background: rgba(0, 0, 0, 0.45);
-    padding: 6px;
+    object-fit: cover;
+    object-position: center;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     margin-bottom: var(--spacing-xs);
     align-self: flex-start;
 }
@@ -152,12 +156,13 @@
 }
 
 .store-hero__logo {
-    width: 64px;
-    height: 64px;
+    width: 60px;
+    height: 60px;
     border-radius: 10px;
-    object-fit: contain;
-    background: rgba(0, 0, 0, 0.45);
-    padding: 6px;
+    object-fit: cover;
+    object-position: center;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     flex-shrink: 0;
 }
 
@@ -211,6 +216,11 @@
     }
 
     .store-hero__logo {
+        width: 46px;
+        height: 46px;
+    }
+
+    .store-card__logo {
         width: 44px;
         height: 44px;
     }
