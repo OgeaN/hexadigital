@@ -9,15 +9,21 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { db } from "./firebase-config.js";
 import { getCart, cartTotal, generateOrderKey } from "./cart.js";
+import { storeLogo, storeWhatsappNumber } from "./stores.js";
 
 export const ORDERS_COLLECTION = "orders";
 
 /**
- * Mevcut sepetten bir sipariş oluşturup Firestore'a yazar.
+ * Verilen mağazanın sepetinden bir sipariş oluşturup Firestore'a yazar.
+ * Mağaza bilgisi siparişe DENORMALIZE edilir: sipariş tarihsel bir kayıttır
+ * (mağaza sonradan isim değiştirebilir) ve siparis.html tek getDoc ile çalışır.
+ * @param {object} store - { id, name, whatsapp, logoUrl/logoUrls }
  * @returns {Promise<{ key: string }>} oluşturulan siparişin key'i
  */
-export async function createOrder() {
-    const cart = getCart();
+export async function createOrder(store) {
+    if (!store?.id) throw new Error("Mağaza bilgisi eksik.");
+
+    const cart = getCart(store.id);
     if (cart.length === 0) throw new Error("Sepet boş.");
 
     // Çakışma ihtimaline karşı birkaç deneme yap
@@ -38,8 +44,15 @@ export async function createOrder() {
 
         await setDoc(refDoc, {
             items,
-            total: cartTotal(),
+            total: cartTotal(store.id),
             currency: "TL",
+            storeId: store.id,
+            // Anlık kopya — mağaza sonradan değişse bile sipariş aynı kalır
+            store: {
+                name: store.name || "",
+                whatsapp: storeWhatsappNumber(store),
+                logoUrl: storeLogo(store)
+            },
             createdAt: serverTimestamp()
         });
 

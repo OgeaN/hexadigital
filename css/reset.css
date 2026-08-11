@@ -7,6 +7,11 @@
 
 html {
     scroll-behavior: smooth;
+    /* Mobil menü ekran dışında (translateX(100%)) durduğu için belgeyi
+       genişletir. Yatay kaydırmayı HEM html HEM body üzerinde kapatmak
+       gerekir — yalnız body yeterli değil, kaydırmayı html devralır. */
+    overflow-x: hidden;
+    max-width: 100%;
 }
 
 body {
@@ -15,6 +20,8 @@ body {
     color: var(--color-text);
     line-height: 1.6;
     overflow-x: hidden;
+    max-width: 100%;
+    position: relative;
 }
 
 img {

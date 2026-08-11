@@ -2,11 +2,53 @@
    Mağaza + Admin stilleri — mevcut tasarım diliyle (variables.css, .card, .btn)
    ========================================================================== */
 
+/* ---------- Mağaza içi araç çubuğu ---------- */
+.shop-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.shop-toolbar__count {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.shop-toolbar__sort {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+}
+
+.shop-toolbar__sort select {
+    background: var(--color-surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font-family: var(--font-main);
+    font-size: 0.88rem;
+    padding: 0.45rem 0.7rem;
+    cursor: pointer;
+}
+
+.shop-toolbar__sort select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
 /* ---------- Ürün Grid ---------- */
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: var(--spacing-md);
+    /* min() ile dar ekranda taşma engellenir; mobil 2 sütun aşağıda tanımlı */
+    grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr));
+    gap: var(--spacing-sm);
 }
 
 /* ---------- Ürün Kartı ---------- */
@@ -16,6 +58,18 @@
     padding: 0;
     overflow: hidden;
 }
+
+/* Vitrin kartlarında ürünün mağazası */
+.product-card__store {
+    display: inline-block;
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+    text-decoration: none;
+}
+
+.product-card__store:hover { text-decoration: underline; }
 
 .product-card__media {
     position: relative;
@@ -88,50 +142,58 @@
 }
 
 .product-card__body {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     display: flex;
     flex-direction: column;
     flex: 1;
 }
 
 .product-card__title {
-    font-size: 1.15rem;
-    margin-bottom: var(--spacing-xs);
+    font-size: 1rem;
+    line-height: 1.3;
+    margin-bottom: 0.3rem;
+    /* Uzun ürün adları kartı bozmasın — 2 satırda kes */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .product-card__desc {
     color: var(--color-text-muted);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     margin-bottom: var(--spacing-sm);
     flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .product-card__footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
     margin-top: auto;
+    flex-wrap: wrap;
 }
 
 .product-card__price {
     color: var(--color-primary);
     font-weight: 700;
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     white-space: nowrap;
-}
-
-.product-card .btn {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.85rem;
 }
 
 /* ---------- Boş / yükleniyor / hata durumları ---------- */
 .shop-status {
     text-align: center;
     color: var(--color-text-muted);
-    padding: var(--spacing-xl) var(--spacing-md);
-    font-size: 1.05rem;
+    padding: var(--spacing-lg) var(--spacing-md);
+    font-size: 1rem;
 }
 
 /* ---------- Sepet rozeti (header) ---------- */
@@ -144,12 +206,14 @@
     padding: 0.4rem;
     display: inline-flex;
     align-items: center;
-    margin-left: var(--spacing-sm);
+    flex-shrink: 0;
 }
 
+.cart-toggle:hover { color: var(--color-primary); }
+
 .cart-toggle svg {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
     stroke: currentColor;
 }
 
@@ -412,6 +476,78 @@
     color: var(--color-text);
 }
 
+/* ---------- Admin sekmeleri ---------- */
+.admin-tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: var(--spacing-lg);
+}
+
+.admin-tab {
+    background: none;
+    border: none;
+    padding: 0.7rem 1.2rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-main);
+    font-size: 0.95rem;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.admin-tab:hover {
+    color: var(--color-text);
+}
+
+.admin-tab.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+/* Sekme panelleri `hidden` attribute'u ile gizlenir (show()/hide() ile çakışmasın).
+   .btn ve .admin-tab kendi `display` değerlerini verdiği için [hidden]'ı
+   açıkça ezmemiz gerekir — yoksa gizlenmeleri işe yaramaz. */
+.admin-tabpanel[hidden],
+.admin-tab[hidden],
+.btn[hidden] {
+    display: none;
+}
+
+/* Hangi mağazanın ürünleri yönetiliyor? */
+.admin-scope {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-bg-light);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+}
+
+.admin-scope label {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.admin-scope select {
+    background: var(--color-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--color-text);
+    font-family: var(--font-main);
+    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem;
+    min-width: 200px;
+}
+
+.admin-scope select:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
 /* Admin form (ekle/düzenle) */
 .admin-form {
     background: var(--color-bg-light);
@@ -616,6 +752,43 @@
     margin-top: 0.4rem;
 }
 
+/* Siparişin verildiği mağaza */
+.order-store {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    background: var(--color-bg-light);
+    border: 1px solid rgba(159, 238, 28, 0.18);
+    border-radius: 8px;
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.order-store__logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 4px;
+    flex-shrink: 0;
+}
+
+.order-store__name {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.order-store__wa {
+    color: var(--color-primary);
+    font-size: 0.9rem;
+    text-decoration: none;
+}
+
+.order-store__wa:hover {
+    text-decoration: underline;
+}
+
 .order-items {
     display: flex;
     flex-direction: column;
@@ -815,7 +988,119 @@
     background: #ff6b6b;
 }
 
-/* ---------- Mobil ---------- */
+/* ==========================================================================
+   Sepete eklendi bildirimi (toast)
+   Drawer'ı zorla açmak yerine bunu gösteriyoruz: kullanıcı gezinmeye devam
+   edebilir, overlay arkadaki kartlara tıklamayı engellemez.
+   ========================================================================== */
+.cart-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translate(-50%, 120%);
+    z-index: 1200;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    max-width: calc(100vw - 32px);
+    padding: 0.8rem 1.1rem;
+    background: var(--color-elevated);
+    border: 1px solid var(--color-primary-line);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow-lg);
+    color: var(--color-text);
+    font-size: 0.9rem;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: transform var(--transition-normal), opacity var(--transition-normal),
+                visibility var(--transition-normal);
+}
+
+.cart-toast.visible {
+    transform: translate(-50%, 0);
+    opacity: 1;
+    visibility: visible;
+}
+
+.cart-toast svg {
+    width: 18px;
+    height: 18px;
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.cart-toast span { min-width: 0; }
+
+.cart-toast strong {
+    font-weight: 600;
+    /* Uzun ürün adı toast'ı taşırmasın */
+    display: inline-block;
+    max-width: 40vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+
+.cart-toast__cta {
+    color: var(--color-primary);
+    font-weight: 600;
+    white-space: nowrap;
+    padding-left: 0.5rem;
+    border-left: 1px solid var(--border);
+}
+
+/* ==========================================================================
+   Mobil
+   ========================================================================== */
+@media (max-width: 768px) {
+    /* Mobilde 2 sütun ürün ızgarası — tek sütun çok fazla kaydırma demek */
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .product-card__body { padding: 0.7rem; }
+    .product-card__title { font-size: 0.9rem; }
+    .product-card__desc { display: none; }   /* dar kartta açıklama gürültü */
+    .product-card__price { font-size: 1rem; }
+
+    /* Fiyat ve buton alt alta, buton tam genişlik */
+    .product-card__footer { gap: 0.5rem; }
+    .product-card__footer .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .shop-toolbar {
+        gap: 0.5rem;
+        font-size: 0.85rem;
+    }
+    .shop-toolbar__sort {
+        margin-left: auto;
+        min-width: 0;
+    }
+    /* Dar ekranda "Sırala" etiketi yer kaplamasın; select kısalsın */
+    .shop-toolbar__sort > span { display: none; }
+    .shop-toolbar__sort select {
+        max-width: 190px;
+        font-size: 0.82rem;
+        padding: 0.4rem 0.5rem;
+    }
+
+    .cart-toast {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        max-width: none;
+        transform: translate(0, 150%);
+        border-radius: var(--radius);
+    }
+    .cart-toast.visible { transform: translate(0, 0); }
+    .cart-toast strong { max-width: 45vw; }
+}
+
 @media (max-width: 600px) {
     .form-grid {
         grid-template-columns: 1fr;
@@ -838,12 +1123,29 @@
         justify-content: flex-end;
     }
 
+    .admin-scope { flex-wrap: wrap; }
+    .admin-scope select { flex: 1; min-width: 0; }
+
     .order-head {
         flex-direction: column;
+        align-items: stretch;
     }
 
     .order-item__img {
         width: 52px;
         height: 52px;
     }
+
+    /* Sepet drawer tam ekran */
+    .cart-drawer { max-width: none; }
+    .cart-drawer__header,
+    .cart-drawer__footer { padding: var(--spacing-sm); }
+    .cart-items { padding: var(--spacing-xs) var(--spacing-sm); }
+}
+
+/* Çok dar ekranlar (360px ve altı) */
+@media (max-width: 380px) {
+    .products-grid { gap: 0.5rem; }
+    .product-card__title { font-size: 0.85rem; }
+    .product-card__footer .btn { font-size: 0.75rem; padding: 0.4rem 0.5rem; }
 }

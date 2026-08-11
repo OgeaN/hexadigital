@@ -13,6 +13,10 @@ const totalEl = $("order-total");
 const totalAmountEl = $("order-total-amount");
 const metaEl = $("order-meta");
 const btnPdf = $("btn-pdf");
+const storeEl = $("order-store");
+const storeLogoEl = $("order-store-logo");
+const storeNameEl = $("order-store-name");
+const storeWaEl = $("order-store-wa");
 
 let currentOrder = null;
 let currentKey = null;
@@ -62,13 +66,56 @@ function showStatus(msg, isError = false) {
     statusEl.style.display = "block";
 }
 
+/** "905354101826" → "+90 535 410 18 26" */
+function formatPhone(raw) {
+    const d = String(raw || "").replace(/\D/g, "");
+    if (d.length === 12 && d.startsWith("90")) {
+        return `+90 ${d.slice(2, 5)} ${d.slice(5, 8)} ${d.slice(8, 10)} ${d.slice(10)}`;
+    }
+    return d ? "+" + d : "";
+}
+
+/** Siparişin verildiği mağazayı gösterir. Eski siparişlerde `store` yoktur. */
+function renderStore(order) {
+    const store = order.store;
+    if (!store?.name) {
+        storeEl.style.display = "none";
+        return;
+    }
+
+    storeNameEl.textContent = store.name;
+
+    if (store.logoUrl) {
+        storeLogoEl.src = store.logoUrl;
+        storeLogoEl.alt = store.name;
+        storeLogoEl.style.display = "";
+    } else {
+        storeLogoEl.style.display = "none";
+    }
+
+    const phone = formatPhone(store.whatsapp);
+    if (phone) {
+        storeWaEl.textContent = `WhatsApp: ${phone}`;
+        storeWaEl.href = `https://wa.me/${String(store.whatsapp).replace(/\D/g, "")}`;
+        storeWaEl.style.display = "";
+    } else {
+        storeWaEl.style.display = "none";
+    }
+
+    storeEl.style.display = "flex";
+}
+
 function renderOrder(order) {
     statusEl.style.display = "none";
 
     const tarih = order.createdAt?.toDate
         ? order.createdAt.toDate().toLocaleString("tr-TR")
         : "";
-    metaEl.textContent = `Sipariş No: ${currentKey}${tarih ? " • " + tarih : ""}`;
+    const storeName = order.store?.name;
+    metaEl.textContent =
+        `Sipariş No: ${currentKey}${tarih ? " • " + tarih : ""}${storeName ? " • " + storeName : ""}`;
+
+    renderStore(order);
 
     const items = order.items || [];
     itemsEl.innerHTML = items.map((item, i) => {
@@ -103,7 +150,9 @@ btnPdf.addEventListener("click", async () => {
         const { buildOrderPdf } = await import("./pdf.js");
         const { doc, fileName } = await buildOrderPdf(currentOrder.items, {
             total: currentOrder.total,
-            orderKey: currentKey
+            orderKey: currentKey,
+            storeId: currentOrder.storeId || "",
+            store: currentOrder.store || null
         });
         doc.save(fileName);
     } catch (err) {

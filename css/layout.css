@@ -1,51 +1,134 @@
-/* Layout */
+/* ==========================================================================
+   Layout — pazaryeri düzeni
+   ========================================================================== */
+
 .container {
-    width: 90%;
+    width: 100%;
     max-width: var(--container-width);
     margin: 0 auto;
     padding: 0 var(--spacing-sm);
 }
 
-/* Header */
+/* ==========================================================================
+   Header — logo + arama + sepet
+   ========================================================================== */
 .header {
-    position: fixed;
+    position: sticky;
     top: 0;
     left: 0;
     width: 100%;
-    height: var(--header-height);
     z-index: 1000;
-    background: rgba(14, 17, 13, 0.8);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(14, 17, 13, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
 }
 
 .header__container {
-    height: 100%;
+    height: var(--header-height);
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: var(--spacing-sm);
+}
+
+.logo {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
 }
 
 .logo img {
     height: auto;
-    max-height: 50px;
+    max-height: 38px;
     width: auto;
-    max-width: 200px;
+    max-width: 170px;
+    display: block;
+}
+
+/* ---------- Header arama ---------- */
+.header__search {
+    flex: 1;
+    max-width: 560px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.header__search input {
+    width: 100%;
+    height: 42px;
+    padding: 0 2.6rem 0 2.6rem;
+    background: var(--color-surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    color: var(--color-text);
+    font-family: var(--font-main);
+    font-size: 0.92rem;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.header__search input::placeholder { color: var(--color-text-dim); }
+
+.header__search input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background: var(--color-bg);
+}
+
+.header__search .search-icon {
+    position: absolute;
+    left: 0.9rem;
+    width: 17px;
+    height: 17px;
+    color: var(--color-text-dim);
+    pointer-events: none;
+}
+
+/* Arama kutusunu temizle (×) */
+.header__search .search-clear {
+    position: absolute;
+    right: 0.7rem;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-elevated);
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    line-height: 1;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.header__search input:not(:placeholder-shown) ~ .search-clear { display: flex; }
+.header__search .search-clear:hover { color: var(--color-text); }
+
+/* ---------- Header sağ taraf ---------- */
+.header__actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    flex-shrink: 0;
 }
 
 .nav__list {
     display: flex;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
     align-items: center;
 }
 
 .nav__link {
     font-weight: 500;
-    font-size: 0.95rem;
+    font-size: 0.92rem;
+    color: var(--color-text-muted);
+    padding: 0.5rem 0.2rem;
     transition: color var(--transition-fast);
 }
 
-.nav__link:hover {
+.nav__link:hover,
+.nav__link.active {
     color: var(--color-primary);
 }
 
@@ -54,53 +137,49 @@
     display: none;
     flex-direction: column;
     gap: 6px;
+    background: none;
+    border: none;
+    padding: 4px;
 }
 
 .mobile-menu-btn span {
-    width: 24px;
+    width: 22px;
     height: 2px;
     background-color: var(--color-text);
+    border-radius: 2px;
 }
 
-/* Sections */
+/* ==========================================================================
+   Bölümler
+   ========================================================================== */
 section {
-    padding: var(--spacing-xl) 0;
+    padding: var(--section-gap) 0;
     position: relative;
 }
 
+/* Vitrin hero — ajans hero'sundan çok daha kompakt */
 .hero {
-    min-height: 60vh; /* Standardized min-height for inner pages */
-    display: flex;
-    align-items: flex-start; /* Align content to top */
-    padding-top: calc(var(--header-height) + var(--spacing-xl)); /* Consistent top spacing */
-}
-
-#home.hero {
-    min-height: 100vh; /* Keep home hero full screen */
-    align-items: flex-start; /* Align to top to match other pages */
+    min-height: auto;
+    padding: var(--spacing-lg) 0 var(--spacing-md);
+    display: block;
 }
 
 .hero__content {
-    max-width: 600px;
+    max-width: 640px;
     position: relative;
     z-index: 10;
 }
 
-.grid {
-    display: grid;
-    gap: var(--spacing-md);
-}
+.grid { display: grid; gap: var(--spacing-md); }
 
-.services__grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    margin-top: var(--spacing-lg);
-}
-
-/* Footer */
+/* ==========================================================================
+   Footer
+   ========================================================================== */
 .footer {
-    padding: var(--spacing-lg) 0;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    margin-top: var(--spacing-xl);
+    padding: var(--spacing-md) 0;
+    border-top: 1px solid var(--border);
+    margin-top: var(--section-gap);
+    background: var(--color-surface);
 }
 
 .footer__container {
@@ -114,32 +193,59 @@ section {
 .footer__brand {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
+}
+
+.footer__brand p {
+    color: var(--color-text-dim);
+    font-size: 0.85rem;
 }
 
 .footer__logo {
     height: auto;
     width: auto;
-    max-width: 200px; /* Safety cap */
+    max-width: 150px;
 }
 
 .footer__links {
     display: flex;
     gap: var(--spacing-md);
+    flex-wrap: wrap;
 }
 
 .footer__links a {
     color: var(--color-text-muted);
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     transition: color var(--transition-fast);
 }
 
-.footer__links a:hover {
-    color: var(--color-primary);
+.footer__links a:hover { color: var(--color-primary); }
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+@media (max-width: 900px) {
+    .header__search { max-width: none; }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
+    :root { --header-height: 64px; }
+
+    /* Arama ikinci satıra iner */
+    .header__container {
+        height: auto;
+        flex-wrap: wrap;
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+        row-gap: 0.6rem;
+    }
+
+    .header__search {
+        order: 3;
+        flex-basis: 100%;
+        max-width: none;
+    }
+
     .nav {
         display: block;
         position: fixed;
@@ -151,32 +257,29 @@ section {
         height: 100vh;
         background: rgba(14, 17, 13, 0.98);
         padding: 80px var(--spacing-md) var(--spacing-md);
-        box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+        box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
         transform: translateX(100%);
-        transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-        border-left: 1px solid rgba(255, 255, 255, 0.05);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-left: 1px solid var(--border);
+        z-index: 1002;
     }
-    
-    .nav.active {
-        transform: translateX(0);
-    }
+
+    .nav.active { transform: translateX(0); }
 
     .nav__list {
         flex-direction: column;
         align-items: flex-start;
-        gap: var(--spacing-lg);
+        gap: var(--spacing-md);
     }
 
-    .nav__link {
-        font-size: 1.1rem;
-    }
+    .nav__link { font-size: 1.05rem; }
 
-    .mobile-menu-btn {
-        display: flex;
-        z-index: 1001;
-    }
-    
-    .hero__title {
-        font-size: 2.5rem;
+    .mobile-menu-btn { display: flex; z-index: 1003; }
+
+    .hero__title { font-size: 2.2rem; }
+
+    .footer__container {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }

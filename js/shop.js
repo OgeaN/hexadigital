@@ -1,6 +1,7 @@
 // ============================================================================
-// Mağaza sayfası — Firestore'dan görünür ürünleri çeker, kartları render eder,
-// sepet drawer'ını ve WhatsApp siparişini yönetir.
+// Mağaza sayfası — ?store=SLUG ile bir mağazayı açar, o mağazanın görünür
+// ürünlerini listeler, sepet drawer'ını ve WhatsApp siparişini yönetir.
+// Sepet ve WhatsApp numarası mağazaya özeldir.
 // ============================================================================
 
 import {
@@ -8,15 +9,37 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { db, PRODUCTS_COLLECTION } from "./firebase-config.js";
 import {
-    getCart, addToCart, removeFromCart, setQty, clearCart,
+    cartKey, getCart, addToCart, removeFromCart, setQty, clearCart,
     cartCount, cartTotal, buildWhatsappUrl
 } from "./cart.js";
 import { createOrder, buildOrderUrl } from "./order.js";
 import { getImages, coverImage } from "./images.js";
+import { storeIdFromUrl, getStore, storeBanner, storeLogo } from "./stores.js";
+import { renderStoreCards } from "./store-cards.js";
+import {
+    esc, formatPrice, renderProductCards, setupSlides as setupSlidesShared
+} from "./product-card.js";
+
+// ---------- Mağaza bağlamı ----------
+const STORE_ID = storeIdFromUrl();
+let store = null;   // init() içinde doldurulur
 
 // ---------- DOM ----------
 const grid = document.getElementById("products-grid");
 const status = document.getElementById("shop-status");
+const storeHero = document.getElementById("store-hero");
+const storeNameEl = document.getElementById("store-name");
+const storeTaglineEl = document.getElementById("store-tagline");
+const storeLogoEl = document.getElementById("store-logo");
+const storesGrid = document.getElementById("stores-grid");
+const shopHeading = document.getElementById("shop-heading");
+const shopIntro = document.getElementById("shop-intro");
+// Mağaza içi araç çubuğu (arama + sıralama)
+const toolbar = document.getElementById("shop-toolbar");
+const searchInput = document.getElementById("shop-search");
+const searchClear = document.getElementById("shop-search-clear");
+const sortSelect = document.getElementById("shop-sort");
+const resultCount = document.getElementById("shop-count");
 const cartToggle = document.getElementById("cart-toggle");
 const cartBadge = document.getElementById("cart-badge");
 const cartDrawer = document.getElementById("cart-drawer");
@@ -38,43 +61,41 @@ const lbCounter = document.getElementById("lb-counter");
 // Yerel ürün önbelleği (id -> ürün) — sepete eklerken kullanılır
 const productMap = new Map();
 
-// HTML kaçışı (XSS koruması — admin metinleri olduğu gibi basılmasın)
-function esc(str) {
-    return String(str ?? "").replace(/[&<>"']/g, c => ({
-        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-    }[c]));
-}
+// esc / formatPrice / kart işaretlemesi product-card.js'ten gelir.
 
-function formatPrice(n) {
-    return Number(n).toLocaleString("tr-TR");
-}
+// Bu mağazanın tüm görünür ürünleri (arama/sıralama bunun üzerinde çalışır)
+let allProducts = [];
 
-// Görsel yokken gösterilecek hexagon placeholder (SVG)
-const PLACEHOLDER_SVG = `
-    <svg class="product-card__placeholder" width="64" height="64" viewBox="0 0 24 24"
-         fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-    </svg>`;
+/** Türkçe karakterleri de kapsayan, büyük/küçük harf duyarsız arama anahtarı. */
+function norm(s) {
+    return String(s || "").toLocaleLowerCase("tr").trim();
+}
 
 // ---------- Ürünleri yükle ----------
 async function loadProducts() {
     try {
+        // Tek eşitlik filtresi → composite index gerekmez.
+        // `visible` filtresi JS'te yapılır (kataloglar küçük).
         const q = query(
             collection(db, PRODUCTS_COLLECTION),
-            where("visible", "==", true)
+            where("storeId", "==", STORE_ID)
         );
         const snap = await getDocs(q);
 
-        if (snap.empty) {
-            status.textContent = "Şu anda görüntülenecek ürün bulunmuyor.";
+        const products = [];
+        snap.forEach(doc => {
+            const data = doc.data();
+            if (data.visible === true) products.push({ id: doc.id, ...data });
+        });
+
+        if (products.length === 0) {
+            status.textContent = "Bu mağazada şu anda görüntülenecek ürün bulunmuyor.";
             status.style.display = "block";
             return;
         }
 
-        const products = [];
-        snap.forEach(doc => products.push({ id: doc.id, ...doc.data() }));
-
-        renderProducts(products);
+        allProducts = products;
+        applyFilter();
         status.style.display = "none";
     } catch (err) {
         console.error("Ürünler yüklenemedi:", err);
@@ -84,55 +105,50 @@ async function loadProducts() {
     }
 }
 
+// ---------- Arama + sıralama ----------
+function applyFilter() {
+    const q = norm(searchInput?.value);
+    const sort = sortSelect?.value || "default";
+
+    let list = allProducts;
+    if (q) {
+        list = list.filter(p => norm(p.name).includes(q) || norm(p.description).includes(q));
+    }
+
+    // Sıralama kopya üzerinde yapılır — allProducts sırası bozulmasın
+    list = [...list];
+    if (sort === "price-asc")  list.sort((a, b) => (a.price || 0) - (b.price || 0));
+    if (sort === "price-desc") list.sort((a, b) => (b.price || 0) - (a.price || 0));
+    if (sort === "name")       list.sort((a, b) => String(a.name).localeCompare(String(b.name), "tr"));
+
+    renderProducts(list);
+
+    if (resultCount) {
+        resultCount.textContent = q
+            ? `"${searchInput.value.trim()}" için ${list.length} ürün`
+            : `${list.length} ürün`;
+    }
+
+    if (list.length === 0) {
+        status.textContent = q
+            ? "Aramanızla eşleşen ürün bulunamadı."
+            : "Bu mağazada şu anda görüntülenecek ürün bulunmuyor.";
+        status.classList.remove("error");
+        status.style.display = "block";
+    } else {
+        status.style.display = "none";
+    }
+}
+
 function renderProducts(products) {
-    grid.innerHTML = "";
-    products.forEach((p, i) => {
-        productMap.set(p.id, p);
+    productMap.clear();
+    products.forEach(p => productMap.set(p.id, p));
 
-        const card = document.createElement("article");
-        card.className = "card product-card reveal";
-        if (i % 3 === 1) card.classList.add("reveal-delay-1");
-        if (i % 3 === 2) card.classList.add("reveal-delay-2");
-
-        const imgs = getImages(p);
-        let media;
-        if (imgs.length === 0) {
-            media = `<div class="product-card__media">${PLACEHOLDER_SVG}</div>`;
-        } else {
-            // Tüm görselleri üst üste koy; ilki aktif. Slide ile geçiş yapılır.
-            const slides = imgs.map((url, idx) =>
-                `<img class="pc-slide${idx === 0 ? " active" : ""}" src="${esc(url)}" alt="${esc(p.name)}" loading="lazy">`
-            ).join("");
-            const dots = imgs.length > 1
-                ? `<div class="pc-dots">${imgs.map((_, idx) => `<span class="pc-dot${idx === 0 ? " active" : ""}"></span>`).join("")}</div>`
-                : "";
-            media = `<div class="product-card__media" data-images="${esc(p.id)}" title="Büyütmek için tıkla">${slides}${dots}</div>`;
-        }
-
-        card.innerHTML = `
-            ${media}
-            <div class="product-card__body">
-                <h3 class="product-card__title">${esc(p.name)}</h3>
-                <p class="product-card__desc">${esc(p.description || "")}</p>
-                <div class="product-card__footer">
-                    <span class="product-card__price">${formatPrice(p.price)} TL</span>
-                    <button class="btn btn--primary" data-add="${esc(p.id)}">Sepete Ekle</button>
-                </div>
-            </div>`;
-
-        grid.appendChild(card);
-    });
+    renderProductCards(grid, products, { zoomable: true });
 
     // Çoklu görselli kartlar için otomatik slide + lightbox bağla
-    setupSlides();
+    slideTimer = setupSlidesShared(grid, slideTimer);
     setupLightbox();
-
-    // Kartlar JS ile sonradan eklendiği için main.js'in IntersectionObserver'ı
-    // bunları yakalamaz; 'reveal' opacity:0 bırakır. Bir sonraki frame'de
-    // 'active' ekleyerek görünür yap + giriş animasyonunu tetikle.
-    requestAnimationFrame(() => {
-        grid.querySelectorAll(".product-card").forEach(card => card.classList.add("active"));
-    });
 
     // "Sepete Ekle" butonları
     grid.querySelectorAll("[data-add]").forEach(btn => {
@@ -140,36 +156,14 @@ function renderProducts(products) {
             const product = productMap.get(btn.dataset.add);
             if (!product) return;
             // Sepete kapak görseliyle ekle (çoklu görsel → ilk görsel)
-            addToCart({ ...product, imageUrl: coverImage(product) });
-            openCart();
+            addToCart(STORE_ID, { ...product, imageUrl: coverImage(product) });
             flashButton(btn);
+            showCartToast(product.name);
         });
     });
 }
 
-// ---------- Otomatik görsel slide (çok görselli kartlar) ----------
 let slideTimer = null;
-function setupSlides() {
-    if (slideTimer) clearInterval(slideTimer);
-
-    // Her ~3 sn'de tüm kartların aktif görselini bir ileri al
-    slideTimer = setInterval(() => {
-        grid.querySelectorAll(".product-card__media").forEach(media => {
-            const slides = media.querySelectorAll(".pc-slide");
-            if (slides.length < 2) return;
-            const dots = media.querySelectorAll(".pc-dot");
-            let cur = [...slides].findIndex(s => s.classList.contains("active"));
-            if (cur < 0) cur = 0;
-            const next = (cur + 1) % slides.length;
-            slides[cur].classList.remove("active");
-            slides[next].classList.add("active");
-            if (dots.length) {
-                dots[cur]?.classList.remove("active");
-                dots[next]?.classList.add("active");
-            }
-        });
-    }, 3000);
-}
 
 // ---------- Lightbox (görsele tıkla → büyüt + galeri) ----------
 let lbImages = [];
@@ -226,10 +220,45 @@ function flashButton(btn) {
     setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 900);
 }
 
+// Sepete eklendi bildirimi (drawer'ı açmak yerine) — kullanıcı gezinmeye
+// devam edebilsin diye. Eskiden her eklemede drawer açılıyordu ve overlay
+// arkadaki kartlara tıklamayı engelliyordu.
+let toastTimer = null;
+
+function hideCartToast() {
+    clearTimeout(toastTimer);
+    document.getElementById("cart-toast")?.classList.remove("visible");
+}
+
+function showCartToast(name) {
+    // Drawer zaten açıksa toast'a gerek yok
+    if (cartDrawer.classList.contains("open")) return;
+
+    let toast = document.getElementById("cart-toast");
+    if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "cart-toast";
+        toast.className = "cart-toast";
+        document.body.appendChild(toast);
+        toast.addEventListener("click", () => { renderCart(); openCart(); });
+    }
+    toast.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span><strong>${esc(name)}</strong> sepete eklendi</span>
+        <span class="cart-toast__cta">Sepeti aç</span>`;
+    toast.classList.add("visible");
+
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("visible"), 2600);
+}
+
 // ---------- Sepet drawer ----------
 function openCart() {
     cartDrawer.classList.add("open");
     cartOverlay.classList.add("open");
+    // Drawer açıkken toast gereksiz — mobilde "Sipariş Ver" butonunu kapatıyor
+    hideCartToast();
 }
 
 function closeCart() {
@@ -239,16 +268,16 @@ function closeCart() {
 
 // Rozet güncelle
 function updateBadge() {
-    const count = cartCount();
+    const count = cartCount(STORE_ID);
     cartBadge.textContent = count;
     cartBadge.classList.toggle("visible", count > 0);
 }
 
 // Sepet içeriğini render et
 function renderCart() {
-    const cart = getCart();
+    const cart = getCart(STORE_ID);
     updateBadge();
-    cartTotalEl.textContent = `${formatPrice(cartTotal())} TL`;
+    cartTotalEl.textContent = `${formatPrice(cartTotal(STORE_ID))} TL`;
 
     if (cart.length === 0) {
         cartItemsEl.innerHTML = `<p class="cart-empty">Sepetiniz boş.</p>`;
@@ -258,6 +287,9 @@ function renderCart() {
         return;
     }
 
+    // "disabled" sınıfı sepet dolunca KALDIRILMALI — eskiden yalnızca
+    // ekleniyordu ve buton dolu sepette bile devre dışı görünüyordu.
+    cartCheckout.classList.remove("disabled");
     cartCheckout.style.pointerEvents = "";
     cartCheckout.style.opacity = "";
 
@@ -287,28 +319,41 @@ function renderCart() {
     cartItemsEl.querySelectorAll("[data-dec]").forEach(b =>
         b.addEventListener("click", () => changeQty(b.dataset.dec, -1)));
     cartItemsEl.querySelectorAll("[data-remove]").forEach(b =>
-        b.addEventListener("click", () => { removeFromCart(b.dataset.remove); }));
+        b.addEventListener("click", () => { removeFromCart(STORE_ID, b.dataset.remove); }));
 }
 
 function changeQty(id, delta) {
-    const item = getCart().find(i => i.id === id);
+    const item = getCart(STORE_ID).find(i => i.id === id);
     if (!item) return;
-    setQty(id, item.qty + delta);
+    setQty(STORE_ID, id, item.qty + delta);
 }
 
 // ---------- Olaylar ----------
-cartToggle.addEventListener("click", () => {
-    renderCart();
-    openCart();
-});
-cartClose.addEventListener("click", closeCart);
-cartOverlay.addEventListener("click", closeCart);
+function wireCartEvents() {
+    cartToggle.addEventListener("click", () => {
+        renderCart();
+        openCart();
+    });
+    cartClose.addEventListener("click", closeCart);
+    cartOverlay.addEventListener("click", closeCart);
 
-cartCheckout.addEventListener("click", async (e) => {
-    e.preventDefault();
-    if (getCart().length === 0 || cartCheckout.dataset.busy === "1") return;
-    await checkout();
-});
+    cartCheckout.addEventListener("click", async (e) => {
+        e.preventDefault();
+        if (getCart(STORE_ID).length === 0 || cartCheckout.dataset.busy === "1") return;
+        await checkout();
+    });
+
+    cartClear.addEventListener("click", () => {
+        clearCart(STORE_ID);
+    });
+
+    // Sepet her değiştiğinde drawer + rozeti tazele
+    window.addEventListener("cart:change", renderCart);
+    // Diğer sekmelerden gelen değişiklikler (localStorage) — sadece BU mağazanınki
+    window.addEventListener("storage", (e) => {
+        if (e.key === cartKey(STORE_ID)) renderCart();
+    });
+}
 
 async function checkout() {
     const original = cartCheckout.innerHTML;
@@ -317,14 +362,15 @@ async function checkout() {
     cartCheckout.textContent = "Sipariş hazırlanıyor...";
 
     try {
-        // 1) Siparişi Firestore'a yaz, key al
-        const { key } = await createOrder();
+        // 1) Siparişi Firestore'a yaz, key al (mağaza bilgisiyle birlikte)
+        const { key } = await createOrder(store);
         // 2) Site içi sipariş sayfası linki üret
         const orderUrl = buildOrderUrl(key);
         // 3) WhatsApp metnini sepet DOLUYKEN üret (temizleme öncesi!)
-        const waUrl = buildWhatsappUrl(orderUrl);
+        //    Numara mağazadan gelir; tanımsızsa burada hata fırlar ve sepet KORUNUR.
+        const waUrl = buildWhatsappUrl(orderUrl, store);
         // 4) Sepeti temizle (sipariş kaydedildi)
-        clearCart();
+        clearCart(STORE_ID);
         closeCart();
         // 5) WhatsApp'ı liste + sipariş linkiyle aç
         window.open(waUrl, "_blank");
@@ -337,17 +383,6 @@ async function checkout() {
         cartCheckout.style.pointerEvents = "";
     }
 }
-
-cartClear.addEventListener("click", () => {
-    clearCart();
-});
-
-// Sepet her değiştiğinde drawer + rozeti tazele
-window.addEventListener("cart:change", renderCart);
-// Diğer sekmelerden gelen değişiklikler (localStorage)
-window.addEventListener("storage", (e) => {
-    if (e.key === "hexa_cart") renderCart();
-});
 
 // ---------- Lightbox olayları ----------
 lbClose.addEventListener("click", closeLightbox);
@@ -365,7 +400,140 @@ document.addEventListener("keydown", (e) => {
     else if (e.key === "ArrowRight") lbStep(1);
 });
 
-// ---------- Başlangıç ----------
-updateBadge();
-renderCart();
-loadProducts();
+// ============================================================================
+// Başlangıç
+// ============================================================================
+
+/** Sepet arayüzünü tamamen gizler (mağaza seçilmemiş / bulunamamış durumlar). */
+function hideCartUI() {
+    cartToggle.style.display = "none";
+    closeCart();
+}
+
+/** Mağaza yok / pasif → uyarı + mağaza listesine dönüş. */
+function showStoreNotFound() {
+    hideCartUI();
+    grid.innerHTML = "";
+    if (storeHero) storeHero.style.display = "none";
+    if (toolbar) toolbar.style.display = "none";
+    const searchForm = document.getElementById("shop-search-form");
+    if (searchForm) searchForm.style.display = "none";
+    status.innerHTML =
+        `Mağaza bulunamadı. Bağlantı hatalı olabilir veya mağaza yayından kaldırılmış olabilir.
+         <br><br>
+         <a class="btn btn--primary" href="index.html#stores">Mağazalara dön</a>`;
+    status.classList.add("error");
+    status.style.display = "block";
+}
+
+/** ?store yoksa: ölü sayfa yerine mağaza seçicisini göster. */
+async function showStorePicker() {
+    hideCartUI();
+    if (storeHero) storeHero.style.display = "none";
+    if (toolbar) toolbar.style.display = "none";
+
+    // Mağaza içi arama bu modda anlamsız — gizle
+    const searchForm = document.getElementById("shop-search-form");
+    if (searchForm) searchForm.style.display = "none";
+
+    const introBlock = document.getElementById("shop-intro-block");
+    if (introBlock) introBlock.style.display = "";
+    if (shopHeading) shopHeading.innerHTML = `<span class="text-highlight">Mağazalar</span>`;
+    if (shopIntro) shopIntro.textContent = "Alışverişe başlamak için bir mağaza seçin.";
+
+    grid.style.display = "none";
+    status.style.display = "none";
+    if (storesGrid) storesGrid.style.display = "";
+
+    const storesStatus = document.getElementById("stores-status");
+    if (storesStatus) storesStatus.style.display = "block";
+    await renderStoreCards(storesGrid, storesStatus);
+}
+
+/** Mağaza başlığını (logo + ad + banner arkaplan) doldurur. */
+function renderStoreHero() {
+    if (!storeHero) return;
+
+    const banner = storeBanner(store);
+    if (banner) {
+        storeHero.style.setProperty("--store-banner", `url('${banner}')`);
+    }
+
+    if (storeNameEl) storeNameEl.textContent = store.name || store.id;
+
+    if (storeTaglineEl) {
+        storeTaglineEl.textContent = store.tagline || "";
+        storeTaglineEl.style.display = store.tagline ? "" : "none";
+    }
+
+    const logo = storeLogo(store);
+    if (storeLogoEl) {
+        if (logo) {
+            storeLogoEl.src = logo;
+            storeLogoEl.alt = store.name || store.id;
+            storeLogoEl.style.display = "";
+        } else {
+            storeLogoEl.style.display = "none";
+        }
+    }
+
+    // Sekme başlığı da mağazayı yansıtsın
+    document.title = `${store.name || store.id} | Hexadigital`;
+    storeHero.style.display = "";
+}
+
+async function init() {
+    // Mağaza seçilmemiş → seçim ekranı
+    if (!STORE_ID) {
+        await showStorePicker();
+        return;
+    }
+
+    try {
+        store = await getStore(STORE_ID);
+    } catch (err) {
+        console.error("Mağaza okunamadı:", err);
+        showStoreNotFound();
+        return;
+    }
+
+    // Yok veya pasif → bulunamadı
+    if (!store || store.active === false) {
+        showStoreNotFound();
+        return;
+    }
+
+    renderStoreHero();
+    wireCartEvents();
+    wireToolbar();
+    updateBadge();
+    renderCart();
+    loadProducts();
+}
+
+/** Mağaza içi arama + sıralama olaylarını bağlar. */
+function wireToolbar() {
+    if (toolbar) toolbar.style.display = "";
+
+    let debounce = null;
+    searchInput?.addEventListener("input", () => {
+        clearTimeout(debounce);
+        debounce = setTimeout(applyFilter, 180);
+    });
+
+    // Enter'da sayfa yenilenmesin
+    searchInput?.closest("form")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        applyFilter();
+    });
+
+    searchClear?.addEventListener("click", () => {
+        searchInput.value = "";
+        searchInput.focus();
+        applyFilter();
+    });
+
+    sortSelect?.addEventListener("change", applyFilter);
+}
+
+init();

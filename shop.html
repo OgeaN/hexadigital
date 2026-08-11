@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mağaza | Hexadigital</title>
-    <meta name="description" content="Hexadigital mağazası - ürünleri keşfedin ve sepetinize ekleyin.">
+    <meta name="description" content="Mağazanın ürünlerini keşfedin, sepetinize ekleyin ve siparişinizi WhatsApp üzerinden tamamlayın.">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,75 +18,92 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/shop.css">
+    <link rel="stylesheet" href="css/stores.css">
 </head>
 <body>
-    <!-- Preloader -->
-    <div class="preloader">
-        <div class="skeleton-header">
-            <div class="skeleton-inner">
-                <div class="skeleton-logo"></div>
-                <div class="skeleton-nav">
-                    <div class="skeleton-nav-item"></div>
-                    <div class="skeleton-nav-item"></div>
-                    <div class="skeleton-nav-item"></div>
-                    <div class="skeleton-nav-item"></div>
-                </div>
-            </div>
-        </div>
-        <div class="skeleton-hero">
-            <div class="skeleton-title"></div>
-            <div class="skeleton-text"></div>
-            <div class="skeleton-text" style="width: 30%"></div>
-        </div>
-    </div>
-
     <canvas id="hexa-bg"></canvas>
 
     <header class="header">
         <div class="container header__container">
             <a href="index.html" class="logo">
-                <img src="assets/logohorizontal.png" alt="Hexadigital Logo">
+                <img src="assets/logohorizontal.png" alt="Hexadigital">
             </a>
-            <nav class="nav">
-                <ul class="nav__list">
-                    <li class="nav__item"><a href="index.html" class="nav__link">Ana Sayfa</a></li>
-                    <li class="nav__item"><a href="services.html" class="nav__link">Hizmetler</a></li>
-                    <li class="nav__item"><a href="projects.html" class="nav__link">Projeler</a></li>
-                    <li class="nav__item"><a href="shop.html" class="nav__link" style="color: var(--color-primary);">Mağaza</a></li>
-                    <li class="nav__item"><a href="about.html" class="nav__link">Hakkımızda</a></li>
-                    <li class="nav__item"><a href="contact.html" class="nav__link btn btn--primary">İletişim</a></li>
-                </ul>
-            </nav>
-            <!-- Sepet butonu (rozetli) -->
-            <button class="cart-toggle" id="cart-toggle" aria-label="Sepeti Aç">
-                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="9" cy="21" r="1"></circle>
-                    <circle cx="20" cy="21" r="1"></circle>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+
+            <!-- Bu mağaza içinde ürün ara -->
+            <form class="header__search" id="shop-search-form" role="search" autocomplete="off">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path>
                 </svg>
-                <span class="cart-badge" id="cart-badge">0</span>
-            </button>
-            <button class="mobile-menu-btn" aria-label="Menüyü Aç">
-                <span></span>
-                <span></span>
-            </button>
+                <input type="search" id="shop-search" placeholder="Bu mağazada ara..." aria-label="Mağazada ara">
+                <button type="button" class="search-clear" id="shop-search-clear" aria-label="Temizle">&times;</button>
+            </form>
+
+            <div class="header__actions">
+                <nav class="nav">
+                    <ul class="nav__list">
+                        <li class="nav__item"><a href="index.html" class="nav__link">Ana Sayfa</a></li>
+                        <li class="nav__item"><a href="index.html#stores" class="nav__link">Mağazalar</a></li>
+                        <li class="nav__item"><a href="contact.html" class="nav__link">İletişim</a></li>
+                    </ul>
+                </nav>
+
+                <!-- Sepet butonu (rozetli) -->
+                <button class="cart-toggle" id="cart-toggle" aria-label="Sepeti Aç">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-badge" id="cart-badge">0</span>
+                </button>
+
+                <button class="mobile-menu-btn" aria-label="Menüyü Aç">
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
         </div>
     </header>
 
     <main>
-        <section class="hero" style="min-height: 40vh;">
-            <div class="container hero__container">
-                <div class="hero__content reveal">
-                    <h1 class="hero__title"><span class="text-highlight">Mağaza</span></h1>
-                    <p class="hero__description">
-                        Ürünlerimizi keşfedin, sepetinize ekleyin ve siparişinizi tek tıkla WhatsApp üzerinden tamamlayın.
+        <section style="padding-top: var(--spacing-md);">
+            <div class="container">
+                <!-- Mağaza başlığı (banner arkaplan + logo) — JS ile doldurulur -->
+                <div class="store-hero" id="store-hero" style="display:none;">
+                    <img class="store-hero__logo" id="store-logo" src="" alt="" style="display:none;">
+                    <div class="store-hero__info">
+                        <h1 class="store-hero__name" id="store-name"></h1>
+                        <p class="store-hero__tagline" id="store-tagline"></p>
+                    </div>
+                    <a class="store-hero__switch" href="index.html#stores">Mağaza değiştir</a>
+                </div>
+
+                <!-- Yalnızca mağaza seçicide kullanılan başlık (JS değiştirir) -->
+                <div id="shop-intro-block" style="display:none;">
+                    <h1 class="hero__title" id="shop-heading"><span class="text-highlight">Mağaza</span></h1>
+                    <p class="hero__description" id="shop-intro">
+                        Alışverişe başlamak için bir mağaza seçin.
                     </p>
                 </div>
-            </div>
-        </section>
 
-        <section class="services" style="padding-top: 0;">
-            <div class="container">
+                <!-- ?store yoksa: mağaza seçim kartları -->
+                <div class="stores-grid" id="stores-grid" style="display:none;"></div>
+                <div class="shop-status" id="stores-status" style="display:none;">Mağazalar yükleniyor...</div>
+
+                <!-- Araç çubuğu: sonuç sayısı + sıralama -->
+                <div class="shop-toolbar" id="shop-toolbar" style="display:none;">
+                    <span class="shop-toolbar__count" id="shop-count"></span>
+                    <label class="shop-toolbar__sort">
+                        <span>Sırala</span>
+                        <select id="shop-sort">
+                            <option value="default">Önerilen</option>
+                            <option value="price-asc">Fiyat: Düşükten yükseğe</option>
+                            <option value="price-desc">Fiyat: Yüksekten düşüğe</option>
+                            <option value="name">İsme göre (A-Z)</option>
+                        </select>
+                    </label>
+                </div>
+
                 <!-- Ürünler buraya JS ile render edilir -->
                 <div class="products-grid" id="products-grid"></div>
                 <!-- Yükleniyor / boş / hata mesajı -->
@@ -102,9 +119,9 @@
                 <p>&copy; 2025 Hexadigital. Tüm hakları saklıdır.</p>
             </div>
             <div class="footer__links">
-                <a href="#">Gizlilik</a>
-                <a href="#">Şartlar</a>
+                <a href="index.html#stores">Mağazalar</a>
                 <a href="contact.html">İletişim</a>
+                <a href="admin.html">Satıcı Girişi</a>
             </div>
         </div>
     </footer>
@@ -141,7 +158,7 @@
         <div class="lb-counter" id="lb-counter"></div>
     </div>
 
-    <!-- main.js: genel UI efektleri (preloader, mobil menü, cursor, canvas) -->
+    <!-- main.js: genel UI efektleri (mobil menü, reveal, canvas) -->
     <script type="module" src="js/main.js"></script>
     <!-- shop.js: ürün listeleme + sepet -->
     <script type="module" src="js/shop.js"></script>

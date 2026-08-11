@@ -1,0 +1,232 @@
+/* ==========================================================================
+   Mağaza seçim kartları + mağaza başlığı (hero)
+   Kart arkaplanı = mağazanın banner görseli. Metin okunabilirliği için
+   üzerine koyu bir degrade perde (scrim) serilir.
+   ========================================================================== */
+
+/* ---------- Mağaza Grid ---------- */
+.stores-grid {
+    display: grid;
+    /* auto-fit: az sayıda mağaza varsa kartlar satırı doldurur.
+       (auto-fill boş sütun bırakıp kartları gereksiz küçük gösteriyordu) */
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+    gap: var(--spacing-sm);
+}
+
+/* ---------- Mağaza Kartı ---------- */
+.store-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;   /* içerik alta yaslı */
+    aspect-ratio: 16 / 10;
+    padding: var(--spacing-md);
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    color: var(--color-text);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: var(--color-bg-light);
+    background-image: var(--store-banner, none);   /* kart başına inline set edilir */
+    background-size: cover;
+    background-position: center;
+    transition: transform var(--transition-normal),
+                border-color var(--transition-normal);
+}
+
+/* Okunabilirlik perdesi — parlak bir banner üzerinde bile metin okunsun */
+.store-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top,
+        rgba(14, 17, 13, 0.94) 0%,
+        rgba(14, 17, 13, 0.70) 45%,
+        rgba(14, 17, 13, 0.20) 100%);
+    transition: opacity var(--transition-normal);
+}
+
+/* İçerik perdenin üstünde kalsın */
+.store-card > * {
+    position: relative;
+    z-index: 1;
+}
+
+.store-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--color-primary);
+}
+
+.store-card:hover::before {
+    opacity: 0.85;
+}
+
+/* Banner yoksa: kırık görsel yerine düz koyu zemin */
+.store-card--no-banner {
+    background-image: none;
+}
+
+.store-card__logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.45);
+    padding: 6px;
+    margin-bottom: var(--spacing-xs);
+    align-self: flex-start;
+}
+
+.store-card__name {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.store-card__tagline {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin: 0.25rem 0 0;
+}
+
+.store-card__cta {
+    margin-top: var(--spacing-sm);
+    color: var(--color-primary);
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.store-card:hover .store-card__cta {
+    gap: 0.6rem;
+}
+
+/* Pasif mağaza rozeti (admin önizlemesi için) */
+.store-card__badge {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    z-index: 1;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   shop.html — mağaza başlığı
+   ========================================================================== */
+.store-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    border-radius: 12px;
+    overflow: hidden;
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: var(--color-bg-light);
+    background-image: var(--store-banner, none);
+    background-size: cover;
+    background-position: center;
+}
+
+.store-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right,
+        rgba(14, 17, 13, 0.94) 0%,
+        rgba(14, 17, 13, 0.78) 55%,
+        rgba(14, 17, 13, 0.45) 100%);
+}
+
+.store-hero > * {
+    position: relative;
+    z-index: 1;
+}
+
+.store-hero__logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    object-fit: contain;
+    background: rgba(0, 0, 0, 0.45);
+    padding: 6px;
+    flex-shrink: 0;
+}
+
+.store-hero__info {
+    flex: 1;
+    min-width: 0;
+}
+
+.store-hero__name {
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.store-hero__tagline {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    margin: 0.25rem 0 0;
+}
+
+.store-hero__switch {
+    color: var(--color-primary);
+    font-size: 0.9rem;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.store-hero__switch:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   Mobil
+   ========================================================================== */
+@media (max-width: 600px) {
+    .stores-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .store-card {
+        aspect-ratio: 16 / 11;
+        padding: var(--spacing-sm);
+    }
+
+    .store-hero {
+        flex-wrap: wrap;
+        padding: var(--spacing-sm);
+        gap: 0.75rem;
+    }
+
+    .store-hero__logo {
+        width: 44px;
+        height: 44px;
+    }
+
+    .store-hero__name {
+        font-size: 1.15rem;
+    }
+
+    .store-hero__tagline {
+        font-size: 0.85rem;
+    }
+
+    /* "Mağaza değiştir" tagline'ın üstüne binmesin — kendi satırına insin */
+    .store-hero__switch {
+        flex-basis: 100%;
+        order: 3;
+        font-size: 0.85rem;
+    }
+}

@@ -1,47 +1,77 @@
-/* Typography Components */
+/* ==========================================================================
+   Tipografi
+   ========================================================================== */
 .hero__title {
-    font-size: 4rem;
+    font-size: 2.8rem;
     font-weight: 700;
-    line-height: 1.1;
-    margin-bottom: var(--spacing-md);
+    line-height: 1.12;
+    margin-bottom: var(--spacing-sm);
     letter-spacing: -0.02em;
 }
 
-.text-highlight {
-    color: var(--color-primary);
-}
+.text-highlight { color: var(--color-primary); }
 
 .hero__description {
-    font-size: 1.125rem;
+    font-size: 1.05rem;
     color: var(--color-text-muted);
-    margin-bottom: var(--spacing-lg);
-    max-width: 480px;
+    margin-bottom: var(--spacing-md);
+    max-width: 540px;
 }
 
+/* Bölüm başlığı — pazaryerinde sola yaslı, "tümünü gör" ile aynı satırda */
 .section-header {
-    text-align: center;
-    margin-bottom: var(--spacing-lg);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-md);
 }
 
 .section-title {
-    font-size: 2.5rem;
-    margin-bottom: var(--spacing-xs);
+    font-size: 1.6rem;
+    margin-bottom: 0.2rem;
+    letter-spacing: -0.01em;
 }
 
 .section-subtitle {
     color: var(--color-text-muted);
+    font-size: 0.95rem;
 }
 
-/* Buttons */
+.section-link {
+    color: var(--color-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.section-link:hover { text-decoration: underline; }
+
+/* Ortalanmış varyant (gerektiğinde) */
+.section-header--center {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* ==========================================================================
+   Butonlar
+   ========================================================================== */
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.8rem 2rem;
-    border-radius: 4px;
+    gap: 0.4rem;
+    padding: 0.7rem 1.4rem;
+    border-radius: var(--radius-sm);
     font-weight: 600;
-    transition: all var(--transition-normal);
-    font-size: 0.95rem;
+    font-family: var(--font-main);
+    font-size: 0.92rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast),
+                border-color var(--transition-fast), transform var(--transition-fast);
 }
 
 .btn--primary {
@@ -50,67 +80,120 @@
 }
 
 .btn--primary:hover {
-    background-color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 20px rgba(159, 238, 28, 0.2);
+    background-color: #b6f74a;
+    transform: translateY(-1px);
 }
 
-.btn--outline {
-    border: 1px solid rgba(255, 255, 255, 0.2);
+.btn--outline,
+.btn--ghost {
+    border-color: var(--border-strong);
     color: var(--color-text);
-    margin-left: var(--spacing-sm);
+    background: transparent;
 }
 
-.btn--outline:hover {
-    border-color: var(--color-text);
-    background: rgba(255, 255, 255, 0.05);
+.btn--outline:hover,
+.btn--ghost:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-primary-soft);
 }
 
-/* Cards */
+.btn--danger {
+    border-color: rgba(255, 82, 82, 0.4);
+    color: var(--color-danger);
+    background: transparent;
+}
+
+.btn--danger:hover { background: rgba(255, 82, 82, 0.12); }
+
+.btn-sm { padding: 0.45rem 0.85rem; font-size: 0.82rem; }
+
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+/* ==========================================================================
+   Kartlar
+   ========================================================================== */
 .card {
-    background: var(--color-bg-light);
+    background: var(--color-surface);
     padding: var(--spacing-md);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius);
+    border: 1px solid var(--border-soft);
     transition: transform var(--transition-normal), border-color var(--transition-normal);
 }
 
 .card:hover {
-    transform: translateY(-5px);
-    border-color: var(--color-primary);
+    transform: translateY(-4px);
+    border-color: var(--color-primary-line);
 }
 
-.card__icon {
+.card__title { font-size: 1.15rem; margin-bottom: var(--spacing-xs); }
+.card__text { color: var(--color-text-muted); font-size: 0.92rem; }
+
+/* ==========================================================================
+   Rozet / etiket (chip)
+   ========================================================================== */
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-2);
+    border: 1px solid var(--border);
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+}
+
+a.chip:hover,
+.chip--active {
+    border-color: var(--color-primary);
     color: var(--color-primary);
-    margin-bottom: var(--spacing-sm);
-    width: 48px;
-    height: 48px;
-    background: rgba(159, 238, 28, 0.1);
+    background: var(--color-primary-soft);
+}
+
+/* Güven şeridi (kargo, güvenli ödeme vb.) */
+.trust-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) 0;
+}
+
+.trust-item {
     display: flex;
     align-items: center;
-    justify-content: center;
-    border-radius: 50%;
+    gap: 0.7rem;
+    padding: var(--spacing-sm);
+    background: var(--color-surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
 }
 
-.card__title {
-    font-size: 1.25rem;
-    margin-bottom: var(--spacing-xs);
+.trust-item svg {
+    width: 22px;
+    height: 22px;
+    color: var(--color-primary);
+    flex-shrink: 0;
 }
 
-.card__text {
-    color: var(--color-text-muted);
-    font-size: 0.95rem;
-}
+.trust-item__title { font-size: 0.9rem; font-weight: 600; }
+.trust-item__text { font-size: 0.8rem; color: var(--color-text-dim); }
 
 /* Canvas Background */
 #hexa-bg {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    /* 100% yerine viewport birimi: belge mobil menü yüzünden genişlese bile
+       canvas ekranı aşıp yatay kaydırma yaratmasın. */
+    width: 100vw;
+    height: 100vh;
+    max-width: 100%;
     z-index: -1;
-    opacity: 0.4;
+    /* Pazaryerinde ürün görselleri öne çıkmalı — desen çok daha silik */
+    opacity: 0.15;
     pointer-events: none;
 }
 

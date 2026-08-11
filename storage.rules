@@ -4,33 +4,67 @@ rules_version = '2';
 // Firebase Storage Güvenlik Kuralları
 // Firebase Konsol > Storage > Rules sekmesine bu kuralları KOPYALAYIN ve "Publish" deyin.
 //
-// >>> ÖNEMLİ: Aşağıdaki adminEmails() listesine yetkili admin maillerinizi yazın.
-//     js/firebase-config.js içindeki ADMIN_EMAILS ve firestore.rules ile AYNI olmalı.
+// İKİ KADEMELİ YETKİ (firestore.rules ile aynı mantık):
+//   • SÜPER ADMIN  → aşağıdaki superAdminEmails() listesi. Bu liste
+//                    js/firebase-config.js ADMIN_EMAILS ve firestore.rules ile AYNI olmalı.
+//   • MAĞAZA ADMİNİ → stores/{id}.adminEmails dizisinde adı geçenler.
+//                    Storage kuralları firestore.get() ile bu diziye bakabilir.
 // ===========================================================================
 
 service firebase.storage {
   match /b/{bucket}/o {
 
-    function adminEmails() {
-      // >>> BURAYA admin maillerinizi yazın (firestore.rules ile aynı) <<<
+    // ---- Süper adminler: firestore.rules ile AYNI olmalı ----
+    function superAdminEmails() {
       return [
-        // "ornek@gmail.com"
+        "osmangundemir1@gmail.com",
+        "ab.sametdundar@gmail.com",
+        "abdsametdundar84@gmail.com"
       ];
     }
 
-    function isAdmin() {
+    function isSuper() {
       return request.auth != null
-          && request.auth.token.email in adminEmails();
+          && request.auth.token.email in superAdminEmails();
     }
 
-    // Ürün görselleri (admin panelinden yüklenir): products/...
-    match /products/{fileName} {
+    // Storage kuralları Firestore'a firestore.get() ile bakabilir
+    function isStoreAdmin(storeId) {
+      return request.auth != null
+          && firestore.exists(/databases/(default)/documents/stores/$(storeId))
+          && request.auth.token.email in
+             firestore.get(/databases/(default)/documents/stores/$(storeId)).data.adminEmails;
+    }
+
+    function canManage(storeId) {
+      return isSuper() || isStoreAdmin(storeId);
+    }
+
+    function isImageUnder5MB() {
+      return request.resource.size < 5 * 1024 * 1024
+          && request.resource.contentType.matches('image/.*');
+    }
+
+    // Ürün görselleri: products/{storeId}/{fileName}
+    match /products/{storeId}/{fileName} {
       // Görseller mağazada herkese görünmeli → okuma açık
       allow read: if true;
-      // Yalnızca yetkili admin yükleyebilir/silebilir + sadece görsel + max 5 MB
-      allow write: if isAdmin()
-                   && request.resource.size < 5 * 1024 * 1024
-                   && request.resource.contentType.matches('image/.*');
+      // O mağazayı yönetenler yükleyebilir/silebilir + sadece görsel + max 5 MB
+      allow write: if canManage(storeId) && isImageUnder5MB();
+    }
+
+    // ESKİ ürün görselleri (mağazasız, göç öncesi): products/{fileName}
+    // Mevcut ürünlerin görselleri bozulmasın diye okuma açık kalır;
+    // yeni yazma yalnızca süper admine.
+    match /products/{fileName} {
+      allow read: if true;
+      allow write: if isSuper() && isImageUnder5MB();
+    }
+
+    // Mağaza banner / logo görselleri: stores/{storeId}/{fileName}
+    match /stores/{storeId}/{fileName} {
+      allow read: if true;
+      allow write: if canManage(storeId) && isImageUnder5MB();
     }
 
     // Diğer tüm yollar kapalı

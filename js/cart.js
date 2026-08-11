@@ -1,20 +1,33 @@
 // ============================================================================
 // Sepet yardımcıları — saf JS, Firebase'siz. Sepet localStorage'da tutulur.
+//
+// ÇOK MAĞAZALI: Her mağazanın kendi sepeti vardır (hexa_cart_{storeId}).
+// Bu yüzden tüm fonksiyonlar İLK PARAMETRE olarak storeId alır.
+// (Modül seviyesinde "aktif mağaza" singleton'ı yerine bu tercih edildi:
+//  siparis.html ve admin bunu hiç set etmez; bayat bir singleton sessizce
+//  yanlış anahtara yazardı.)
 // ============================================================================
 
-const CART_KEY = "hexa_cart";
+import { storeCartKey, storeWhatsappNumber } from "./stores.js";
 
-// WhatsApp sipariş numarası (uluslararası format, başında + ve boşluk olmadan)
-export const WHATSAPP_NUMBER = "905354101826";
+// ----------------------------------------------------------------------------
+// Anahtar
+// ----------------------------------------------------------------------------
+
+/** Mağazaya özel localStorage anahtarı. storeId yoksa hata. */
+export function cartKey(storeId) {
+    if (!storeId) throw new Error("Sepet işlemi için mağaza kimliği (storeId) gerekli.");
+    return storeCartKey(storeId);
+}
 
 // ----------------------------------------------------------------------------
 // Okuma / yazma
 // ----------------------------------------------------------------------------
 
-/** Sepeti localStorage'dan döndürür. Hata olursa boş dizi. */
-export function getCart() {
+/** Mağazanın sepetini localStorage'dan döndürür. Hata olursa boş dizi. */
+export function getCart(storeId) {
     try {
-        const raw = localStorage.getItem(CART_KEY);
+        const raw = localStorage.getItem(cartKey(storeId));
         const parsed = raw ? JSON.parse(raw) : [];
         return Array.isArray(parsed) ? parsed : [];
     } catch {
@@ -23,10 +36,10 @@ export function getCart() {
 }
 
 /** Sepeti localStorage'a yazar ve değişiklik olayını tetikler. */
-export function saveCart(cart) {
-    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+export function saveCart(storeId, cart) {
+    localStorage.setItem(cartKey(storeId), JSON.stringify(cart));
     // Aynı sekme içindeki dinleyiciler için özel olay
-    window.dispatchEvent(new CustomEvent("cart:change", { detail: cart }));
+    window.dispatchEvent(new CustomEvent("cart:change", { detail: { storeId, cart } }));
 }
 
 // ----------------------------------------------------------------------------
@@ -37,8 +50,8 @@ export function saveCart(cart) {
  * Ürünü sepete ekler. Zaten varsa adedini artırır.
  * product: { id, name, price, imageUrl }
  */
-export function addToCart(product, qty = 1) {
-    const cart = getCart();
+export function addToCart(storeId, product, qty = 1) {
+    const cart = getCart(storeId);
     const existing = cart.find(item => item.id === product.id);
     if (existing) {
         existing.qty += qty;
@@ -51,33 +64,33 @@ export function addToCart(product, qty = 1) {
             qty: qty
         });
     }
-    saveCart(cart);
+    saveCart(storeId, cart);
     return cart;
 }
 
 /** Ürünü sepetten tamamen çıkarır. */
-export function removeFromCart(id) {
-    const cart = getCart().filter(item => item.id !== id);
-    saveCart(cart);
+export function removeFromCart(storeId, id) {
+    const cart = getCart(storeId).filter(item => item.id !== id);
+    saveCart(storeId, cart);
     return cart;
 }
 
 /** Bir ürünün adedini ayarlar. 0 veya altına düşerse sepetten çıkarır. */
-export function setQty(id, qty) {
-    let cart = getCart();
+export function setQty(storeId, id, qty) {
+    let cart = getCart(storeId);
     const item = cart.find(i => i.id === id);
     if (!item) return cart;
     item.qty = qty;
     if (item.qty <= 0) {
         cart = cart.filter(i => i.id !== id);
     }
-    saveCart(cart);
+    saveCart(storeId, cart);
     return cart;
 }
 
 /** Sepeti tamamen boşaltır. */
-export function clearCart() {
-    saveCart([]);
+export function clearCart(storeId) {
+    saveCart(storeId, []);
     return [];
 }
 
@@ -86,31 +99,31 @@ export function clearCart() {
 // ----------------------------------------------------------------------------
 
 /** Sepetteki toplam ürün adedi (rozet için). */
-export function cartCount() {
-    return getCart().reduce((sum, item) => sum + item.qty, 0);
+export function cartCount(storeId) {
+    return getCart(storeId).reduce((sum, item) => sum + item.qty, 0);
 }
 
 /** Sepet tutarı toplamı. */
-export function cartTotal() {
-    return getCart().reduce((sum, item) => sum + item.price * item.qty, 0);
+export function cartTotal(storeId) {
+    return getCart(storeId).reduce((sum, item) => sum + item.price * item.qty, 0);
 }
 
 // ----------------------------------------------------------------------------
 // WhatsApp metni
 // ----------------------------------------------------------------------------
 
-/** Fiyatı binlik ayraçlı Türkçe formata çevirir: 2998 -> "2.998" */
-function formatPrice(n) {
-    return Number(n).toLocaleString("tr-TR");
-}
-
 /**
  * WhatsApp sipariş mesajı metnini üretir.
  * Ürün listesi metne YAZILMAZ — sipariş detayı linkte tutulur.
  * @param {string} [orderUrl] - verilirse mesaja sipariş sayfası linki eklenir.
+ * @param {object} [store]    - verilirse mesaja mağaza adı eklenir.
  */
-export function buildWhatsappText(orderUrl) {
+export function buildWhatsappText(orderUrl, store) {
     const lines = ["Merhaba, sipariş vermek istiyorum."];
+    if (store?.name) {
+        lines.push("");
+        lines.push(`Mağaza: ${store.name}`);
+    }
     if (orderUrl) {
         lines.push("");
         lines.push("Sipariş detayı ve görselli liste:");
@@ -121,11 +134,21 @@ export function buildWhatsappText(orderUrl) {
 
 /**
  * WhatsApp paylaşım linkini (önceden doldurulmuş mesajla) döndürür.
- * @param {string} [orderUrl] - varsa mesaja sipariş sayfası linki de eklenir.
+ * Numara mağazadan gelir — yanlış yapılandırılmış bir mağaza sessizce
+ * yanlış telefona yönlendirmek yerine HATA verir.
+ * @param {string} [orderUrl]
+ * @param {object} store - { name, whatsapp }
  */
-export function buildWhatsappUrl(orderUrl) {
-    const text = encodeURIComponent(buildWhatsappText(orderUrl));
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=${text}`;
+export function buildWhatsappUrl(orderUrl, store) {
+    const number = storeWhatsappNumber(store);
+    if (!number) {
+        throw new Error(
+            "Bu mağaza için WhatsApp numarası tanımlı değil. " +
+            "Lütfen mağaza yöneticisiyle iletişime geçin."
+        );
+    }
+    const text = encodeURIComponent(buildWhatsappText(orderUrl, store));
+    return `https://wa.me/${number}?text=${text}`;
 }
 
 /**

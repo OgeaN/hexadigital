@@ -3,142 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hexadigital | Geleceği Tasarlıyoruz</title>
-    <meta name="description" content="Hexadigital - Modern yazılım ve tasarım çözümleri.">
-    
+    <title>Hexadigital | Mağazalar &amp; Ürünler</title>
+    <meta name="description" content="Hexadigital pazaryeri — mağazaları keşfedin, ürünleri sepetinize ekleyin, siparişinizi WhatsApp üzerinden tamamlayın.">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Styles -->
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/shop.css">
+    <link rel="stylesheet" href="css/stores.css">
 </head>
 <body>
-    <!-- Preloader -->
-    <div class="preloader">
-        <div class="skeleton-header">
-            <div class="skeleton-inner">
-                <div class="skeleton-logo"></div>
-                <div class="skeleton-nav">
-                    <div class="skeleton-nav-item"></div>
-                    <div class="skeleton-nav-item"></div>
-                    <div class="skeleton-nav-item"></div>
-                    <div class="skeleton-nav-item"></div>
-                </div>
-            </div>
-        </div>
-        <div class="skeleton-hero">
-            <div class="skeleton-title"></div>
-            <div class="skeleton-text"></div>
-            <div class="skeleton-text" style="width: 30%"></div>
-        </div>
-    </div>
-
-    <!-- Background Animation Layer -->
     <canvas id="hexa-bg"></canvas>
 
     <header class="header">
         <div class="container header__container">
-            <a href="#" class="logo">
-                <img src="assets/logohorizontal.png" alt="Hexadigital Logo">
+            <a href="index.html" class="logo">
+                <img src="assets/logohorizontal.png" alt="Hexadigital">
             </a>
-            <nav class="nav">
-                <ul class="nav__list">
-                    <li class="nav__item"><a href="index.html" class="nav__link">Ana Sayfa</a></li>
-                    <li class="nav__item"><a href="services.html" class="nav__link">Hizmetler</a></li>
-                    <li class="nav__item"><a href="projects.html" class="nav__link">Projeler</a></li>
-                    <li class="nav__item"><a href="shop.html" class="nav__link">Mağaza</a></li>
-                    <li class="nav__item"><a href="about.html" class="nav__link">Hakkımızda</a></li>
-                    <li class="nav__item"><a href="contact.html" class="nav__link btn btn--primary">İletişim</a></li>
-                </ul>
-            </nav>
-            <button class="mobile-menu-btn" aria-label="Menüyü Aç">
-                <span></span>
-                <span></span>
-            </button>
+
+            <!-- Arama: tüm mağazalarda ürün ara -->
+            <form class="header__search" id="global-search" role="search" autocomplete="off">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path>
+                </svg>
+                <input type="search" id="q" placeholder="Ürün veya mağaza ara..." aria-label="Ara">
+                <button type="button" class="search-clear" id="q-clear" aria-label="Temizle">&times;</button>
+            </form>
+
+            <div class="header__actions">
+                <nav class="nav">
+                    <ul class="nav__list">
+                        <li class="nav__item"><a href="index.html" class="nav__link active">Ana Sayfa</a></li>
+                        <li class="nav__item"><a href="index.html#stores" class="nav__link">Mağazalar</a></li>
+                        <li class="nav__item"><a href="contact.html" class="nav__link">İletişim</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" aria-label="Menüyü Aç">
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
         </div>
     </header>
 
     <main>
-        <section id="home" class="hero">
-            <div class="container hero__container">
+        <!-- ============ Vitrin başlığı ============ -->
+        <section class="hero">
+            <div class="container">
                 <div class="hero__content reveal">
                     <h1 class="hero__title">
-                        <span class="text-highlight">Dijital</span> Dünyanızı<br>
-                        Yeniden Şekillendiriyoruz
+                        Tek yerden <span class="text-highlight">tüm mağazalar</span>
                     </h1>
                     <p class="hero__description">
-                        Modern tasarım anlayışı ve güçlü yazılım altyapısı ile markanızı geleceğe taşıyoruz. Minimalist, hızlı ve etkileyici.
+                        Mağazaları keşfedin, ürünleri sepetinize ekleyin ve siparişinizi
+                        tek tıkla WhatsApp üzerinden tamamlayın.
                     </p>
-                    <div class="hero__actions">
-                        <a href="contact.html" class="btn btn--primary">Projeye Başla</a>
-                        <a href="services.html" class="btn btn--outline">Keşfet</a>
-                    </div>
+                    <a href="#stores" class="btn btn--primary">Mağazalara Göz At</a>
                 </div>
             </div>
         </section>
 
-        <!-- Tech Stack Marquee -->
-        <div class="tech-stack">
-            <div class="tech-track">
-                <div class="tech-item">HTML5</div>
-                <div class="tech-item">CSS3</div>
-                <div class="tech-item">JavaScript</div>
-                <div class="tech-item">React</div>
-                <div class="tech-item">Node.js</div>
-                <div class="tech-item">Python</div>
-                <div class="tech-item">Flutter</div>
-                <div class="tech-item">AWS</div>
-                <div class="tech-item">Docker</div>
-                <div class="tech-item">UI/UX</div>
-                <!-- Duplicate for seamless loop -->
-                <div class="tech-item">HTML5</div>
-                <div class="tech-item">CSS3</div>
-                <div class="tech-item">JavaScript</div>
-                <div class="tech-item">React</div>
-                <div class="tech-item">Node.js</div>
-                <div class="tech-item">Python</div>
-                <div class="tech-item">Flutter</div>
-                <div class="tech-item">AWS</div>
-                <div class="tech-item">Docker</div>
-                <div class="tech-item">UI/UX</div>
-            </div>
-        </div>
-
-        <section id="services" class="services">
+        <!-- ============ Mağazalar ============ -->
+        <section id="stores">
             <div class="container">
                 <div class="section-header reveal">
-                    <h2 class="section-title">Neler Yapıyoruz?</h2>
-                    <p class="section-subtitle">Sizin için geliştirdiğimiz yenilikçi çözümler.</p>
+                    <div>
+                        <h2 class="section-title">Mağazalar</h2>
+                        <p class="section-subtitle">Alışverişe başlamak için bir mağaza seçin.</p>
+                    </div>
                 </div>
-                <div class="grid services__grid">
-                    <article class="card service-card reveal reveal-delay-1">
-                        <div class="card__icon">
-                            <!-- Icon placeholder -->
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <!-- Mağaza kartları buraya JS ile render edilir -->
+                <div class="stores-grid" id="stores-grid"></div>
+                <div class="shop-status" id="stores-status">Mağazalar yükleniyor...</div>
+            </div>
+        </section>
+
+        <!-- ============ Öne çıkan ürünler (tüm mağazalardan) ============ -->
+        <section id="featured">
+            <div class="container">
+                <div class="section-header reveal">
+                    <div>
+                        <h2 class="section-title" id="featured-title">Öne Çıkan Ürünler</h2>
+                        <p class="section-subtitle" id="featured-subtitle">Tüm mağazalardan seçmeler.</p>
+                    </div>
+                </div>
+                <!-- Ürün kartları buraya JS ile render edilir -->
+                <div class="products-grid" id="featured-grid"></div>
+                <div class="shop-status" id="featured-status">Ürünler yükleniyor...</div>
+            </div>
+        </section>
+
+        <!-- ============ Güven şeridi ============ -->
+        <section id="trust" style="padding-top:0;">
+            <div class="container">
+                <div class="trust-bar reveal">
+                    <div class="trust-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2 22l5.25-1.38a9.9 9.9 0 0 0 4.78 1.22c5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2z"/>
+                        </svg>
+                        <div>
+                            <div class="trust-item__title">WhatsApp ile Sipariş</div>
+                            <div class="trust-item__text">Doğrudan mağazayla iletişim</div>
                         </div>
-                        <h3 class="card__title">Web Tasarım & UI/UX</h3>
-                        <p class="card__text">Kullanıcı deneyimini merkeze alan, estetik ve fonksiyonel arayüzler.</p>
-                    </article>
-                    <article class="card service-card reveal reveal-delay-2">
-                        <div class="card__icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                    </div>
+                    <div class="trust-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <div>
+                            <div class="trust-item__title">Görselli Sipariş PDF'i</div>
+                            <div class="trust-item__text">Siparişinizi kaydedin</div>
                         </div>
-                        <h3 class="card__title">Yazılım Geliştirme</h3>
-                        <p class="card__text">Ölçeklenebilir, güvenli ve performanslı özel yazılım çözümleri.</p>
-                    </article>
-                    <article class="card service-card reveal reveal-delay-3">
-                        <div class="card__icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    </div>
+                    <div class="trust-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+                        </svg>
+                        <div>
+                            <div class="trust-item__title">Güvenli Mağazalar</div>
+                            <div class="trust-item__text">Doğrulanmış satıcılar</div>
                         </div>
-                        <h3 class="card__title">Marka Kimliği</h3>
-                        <p class="card__text">Dijital dünyada iz bırakan, güçlü ve tutarlı marka stratejileri.</p>
-                    </article>
+                    </div>
+                    <div class="trust-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <div>
+                            <div class="trust-item__title">Hızlı Dönüş</div>
+                            <div class="trust-item__text">Mesajınız doğrudan satıcıya</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -151,13 +155,14 @@
                 <p>&copy; 2025 Hexadigital. Tüm hakları saklıdır.</p>
             </div>
             <div class="footer__links">
-                <a href="#">Gizlilik</a>
-                <a href="#">Şartlar</a>
-                <a href="#">İletişim</a>
+                <a href="index.html#stores">Mağazalar</a>
+                <a href="contact.html">İletişim</a>
+                <a href="admin.html">Satıcı Girişi</a>
             </div>
         </div>
     </footer>
 
     <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/home.js"></script>
 </body>
 </html>

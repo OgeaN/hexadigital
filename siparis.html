@@ -25,19 +25,26 @@
     <header class="header">
         <div class="container header__container">
             <a href="index.html" class="logo">
-                <img src="assets/logohorizontal.png" alt="Hexadigital Logo">
+                <img src="assets/logohorizontal.png" alt="Hexadigital">
             </a>
-            <nav class="nav">
-                <ul class="nav__list">
-                    <li class="nav__item"><a href="index.html" class="nav__link">Ana Sayfa</a></li>
-                    <li class="nav__item"><a href="shop.html" class="nav__link">Mağaza</a></li>
-                </ul>
-            </nav>
+            <div class="header__actions" style="margin-left:auto;">
+                <nav class="nav">
+                    <ul class="nav__list">
+                        <li class="nav__item"><a href="index.html" class="nav__link">Ana Sayfa</a></li>
+                        <li class="nav__item"><a href="index.html#stores" class="nav__link">Mağazalar</a></li>
+                        <li class="nav__item"><a href="contact.html" class="nav__link">İletişim</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" aria-label="Menüyü Aç">
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
         </div>
     </header>
 
     <main>
-        <section class="services" style="min-height: 70vh; padding-top: calc(var(--header-height) + var(--spacing-lg));">
+        <section class="services" style="min-height: 70vh; padding-top: var(--spacing-md);">
             <div class="container" style="max-width: 760px;">
 
                 <div class="order-head">
@@ -57,6 +64,15 @@
 
                 <!-- Durum mesajı -->
                 <div class="shop-status" id="order-status">Sipariş yükleniyor...</div>
+
+                <!-- Siparişin verildiği mağaza -->
+                <div class="order-store" id="order-store" style="display:none;">
+                    <img class="order-store__logo" id="order-store-logo" src="" alt="" style="display:none;">
+                    <div class="order-store__info">
+                        <div class="order-store__name" id="order-store-name"></div>
+                        <a class="order-store__wa" id="order-store-wa" href="#" target="_blank" rel="noopener"></a>
+                    </div>
+                </div>
 
                 <!-- Sipariş öğeleri -->
                 <div class="order-items" id="order-items"></div>

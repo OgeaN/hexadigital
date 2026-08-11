@@ -18,8 +18,7 @@ class App {
         // Smooth Scroll for Anchor Links
         this.initSmoothScroll();
 
-        // Initialize Custom Cursor
-        this.initCustomCursor();
+        // Özel imleç kaldırıldı — e-ticarette sistem imleci beklenir.
 
         // Initialize Scroll Animations
         this.initScrollAnimations();
@@ -117,44 +116,6 @@ class App {
                 }
             });
         });
-    }
-
-    initCustomCursor() {
-        // Only init if pointer is fine (desktop)
-        if (window.matchMedia("(pointer: fine)").matches) {
-            const cursorDot = document.createElement('div');
-            cursorDot.className = 'cursor-dot';
-            const cursorOutline = document.createElement('div');
-            cursorOutline.className = 'cursor-outline';
-            
-            document.body.appendChild(cursorDot);
-            document.body.appendChild(cursorOutline);
-
-            window.addEventListener('mousemove', (e) => {
-                const posX = e.clientX;
-                const posY = e.clientY;
-
-                cursorDot.style.left = `${posX}px`;
-                cursorDot.style.top = `${posY}px`;
-
-                // Add a slight delay for the outline for a fluid feel
-                cursorOutline.animate({
-                    left: `${posX}px`,
-                    top: `${posY}px`
-                }, { duration: 500, fill: "forwards" });
-            });
-
-            // Hover effect
-            const interactiveElements = document.querySelectorAll('a, button, input, textarea, select, .card');
-            interactiveElements.forEach(el => {
-                el.addEventListener('mouseenter', () => {
-                    cursorOutline.classList.add('hovered');
-                });
-                el.addEventListener('mouseleave', () => {
-                    cursorOutline.classList.remove('hovered');
-                });
-            });
-        }
     }
 
     initScrollAnimations() {

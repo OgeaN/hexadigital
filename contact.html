@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>İletişim | Hexadigital</title>
-    <meta name="description" content="Hexadigital ile iletişime geçin. Projenizi hayata geçirelim.">
+    <meta name="description" content="Hexadigital pazaryeri iletişim — siparişleriniz ve satıcılık başvuruları için bize ulaşın.">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -110,32 +110,31 @@
     <header class="header">
         <div class="container header__container">
             <a href="index.html" class="logo">
-                <img src="assets/logohorizontal.png" alt="Hexadigital Logo">
+                <img src="assets/logohorizontal.png" alt="Hexadigital">
             </a>
-            <nav class="nav">
-                <ul class="nav__list">
-                    <li class="nav__item"><a href="index.html" class="nav__link">Ana Sayfa</a></li>
-                    <li class="nav__item"><a href="services.html" class="nav__link">Hizmetler</a></li>
-                    <li class="nav__item"><a href="projects.html" class="nav__link">Projeler</a></li>
-                    <li class="nav__item"><a href="shop.html" class="nav__link">Mağaza</a></li>
-                    <li class="nav__item"><a href="about.html" class="nav__link">Hakkımızda</a></li>
-                    <li class="nav__item"><a href="contact.html" class="nav__link btn btn--primary">İletişim</a></li>
-                </ul>
-            </nav>
-            <button class="mobile-menu-btn" aria-label="Menüyü Aç">
-                <span></span>
-                <span></span>
-            </button>
+            <div class="header__actions" style="margin-left:auto;">
+                <nav class="nav">
+                    <ul class="nav__list">
+                        <li class="nav__item"><a href="index.html" class="nav__link">Ana Sayfa</a></li>
+                        <li class="nav__item"><a href="index.html#stores" class="nav__link">Mağazalar</a></li>
+                        <li class="nav__item"><a href="contact.html" class="nav__link active">İletişim</a></li>
+                    </ul>
+                </nav>
+                <button class="mobile-menu-btn" aria-label="Menüyü Aç">
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
         </div>
     </header>
 
     <main>
-        <section class="hero" style="min-height: 40vh;">
+        <section class="hero">
             <div class="container hero__container">
                 <div class="hero__content reveal">
                     <h1 class="hero__title"><span class="text-highlight">İletişime</span> Geçin</h1>
                     <p class="hero__description">
-                        Yeni bir proje fikriniz mi var? Yoksa sadece tanışmak mı istiyorsunuz? Bize ulaşın.
+                        Siparişiniz, mağazalar veya satıcı olmak hakkında sorularınız için bize yazın.
                     </p>
                 </div>
             </div>
@@ -160,14 +159,14 @@
                                 <label for="subject" class="form-label">Konu</label>
                                 <select id="subject" class="form-input">
                                     <option value="">Seçiniz...</option>
-                                    <option value="project">Yeni Proje</option>
-                                    <option value="job">Kariyer</option>
+                                    <option value="order">Siparişim hakkında</option>
+                                    <option value="seller">Satıcı olmak istiyorum</option>
                                     <option value="other">Diğer</option>
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label for="message" class="form-label">Mesajınız</label>
-                                <textarea id="message" class="form-textarea" rows="5" placeholder="Bize projenizden bahsedin..."></textarea>
+                                <textarea id="message" class="form-textarea" rows="5" placeholder="Mesajınızı yazın..."></textarea>
                             </div>
                             <button type="submit" class="btn btn--primary" style="width: 100%;">Gönder</button>
                         </form>
@@ -177,7 +176,7 @@
                     <div class="contact-info reveal reveal-delay-2">
                         <h2 class="section-title mb-2">Bize Ulaşın</h2>
                         <p class="mb-3" style="color: var(--color-text-muted);">
-                            Sorularınız için aşağıdaki iletişim kanallarından bize ulaşabilir veya formu doldurabilirsiniz. En kısa sürede size dönüş yapacağız.
+                            Sipariş vermek için mağaza sayfasındaki WhatsApp butonunu kullanabilirsiniz. Diğer sorularınız için aşağıdaki kanallardan bize ulaşın.
                         </p>
 
                         <div class="contact-info-item">
@@ -186,19 +185,11 @@
                             </div>
                             <div>
                                 <h4 style="font-weight: 600; margin-bottom: 4px;">E-posta</h4>
-                                <a href="mailto:info@hexadigital.com" style="color: var(--color-text-muted);">info@hexadigital.com</a>
+                                <a href="mailto:osmangundemir1@gmail.com" style="color: var(--color-text-muted);">osmangundemir1@gmail.com</a>
                             </div>
                         </div>
 
-                        <div class="contact-info-item">
-                            <div class="contact-icon">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.12 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                            </div>
-                            <div>
-                                <h4 style="font-weight: 600; margin-bottom: 4px;">Telefon</h4>
-                                <a href="tel:+902121234567" style="color: var(--color-text-muted);">+90 (212) 123 45 67</a>
-                            </div>
-                        </div>
+                        
 
                         <div class="contact-info-item">
                             <div class="contact-icon">
@@ -207,8 +198,8 @@
                             <div>
                                 <h4 style="font-weight: 600; margin-bottom: 4px;">Ofis</h4>
                                 <p style="color: var(--color-text-muted);">
-                                    Maslak Mah. Büyükdere Cad.<br>
-                                    No: 123, Sarıyer / İstanbul
+                                    Konya,Selçuklu<br>
+                                    Türkiye
                                 </p>
                             </div>
                         </div>
@@ -227,9 +218,9 @@
                 <p>&copy; 2025 Hexadigital. Tüm hakları saklıdır.</p>
             </div>
             <div class="footer__links">
-                <a href="#">Gizlilik</a>
-                <a href="#">Şartlar</a>
+                <a href="index.html#stores">Mağazalar</a>
                 <a href="contact.html">İletişim</a>
+                <a href="admin.html">Satıcı Girişi</a>
             </div>
         </div>
     </footer>

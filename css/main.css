@@ -32,77 +32,9 @@
 .reveal-delay-2 { transition-delay: 0.2s; }
 .reveal-delay-3 { transition-delay: 0.3s; }
 
-/* Custom Cursor */
-.cursor-dot,
-.cursor-outline {
-    position: fixed;
-    top: 0;
-    left: 0;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    z-index: 9999;
-    pointer-events: none;
-}
-
-.cursor-dot {
-    width: 8px;
-    height: 8px;
-    background-color: var(--color-primary);
-}
-
-.cursor-outline {
-    width: 40px;
-    height: 40px;
-    border: 1px solid rgba(159, 238, 28, 0.5);
-    transition: width 0.2s, height 0.2s, background-color 0.2s;
-}
-
-body:hover .cursor-outline.hovered {
-    width: 60px;
-    height: 60px;
-    background-color: rgba(159, 238, 28, 0.1);
-    border-color: transparent;
-}
-
-/* Hide default cursor on non-touch devices */
-@media (pointer: fine) {
-    body {
-        cursor: none;
-    }
-    a, button, input, textarea, select {
-        cursor: none;
-    }
-}
-
-/* Tech Stack Marquee */
-.tech-stack {
-    padding: var(--spacing-lg) 0;
-    background: var(--color-bg-light);
-    border-top: 1px solid rgba(255,255,255,0.05);
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    overflow: hidden;
-}
-
-.tech-track {
-    display: flex;
-    gap: var(--spacing-xl);
-    width: max-content;
-    animation: scroll 30s linear infinite;
-}
-
-.tech-item {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--color-text-muted);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-@keyframes scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
+/* Özel imleç (cursor-dot / cursor-outline) KALDIRILDI.
+   E-ticarette varsayılan imleç beklenir: tıklanabilir alanlar, metin seçimi ve
+   form alanları sistem imleciyle çok daha okunur. main.js artık üretmiyor. */
 
 /* Form Validation Styles */
 .form-input.error, .form-textarea.error {

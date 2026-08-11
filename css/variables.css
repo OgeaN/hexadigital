@@ -1,25 +1,60 @@
 :root {
     /* Brand Colors */
     --color-primary: #9FEE1C;
+    --color-primary-dark: #7FC414;
+    --color-primary-soft: rgba(159, 238, 28, 0.12);
+    --color-primary-line: rgba(159, 238, 28, 0.28);
+
+    /* Zeminler — pazaryeri düzeni için katmanlı yüzeyler */
     --color-bg: #0E110D;
     --color-bg-light: #1a1f18;
+    --color-surface: #151a13;      /* kart zemini */
+    --color-surface-2: #1f2620;    /* kart üstü (input, chip) */
+    --color-elevated: #232b21;     /* açılır panel */
+
+    /* Metin */
     --color-text: #ffffff;
     --color-text-muted: #a0a0a0;
-    
+    --color-text-dim: #6f7a6a;
+
+    /* Kenarlıklar */
+    --border: rgba(255, 255, 255, 0.08);
+    --border-soft: rgba(255, 255, 255, 0.04);
+    --border-strong: rgba(255, 255, 255, 0.16);
+
+    /* Durum renkleri */
+    --color-danger: #ff5252;
+    --color-warning: #ffb020;
+    --color-success: #46d369;
+
     /* Typography */
     --font-main: 'Space Grotesk', sans-serif;
-    
+
     /* Spacing */
     --spacing-xs: 0.5rem;
     --spacing-sm: 1rem;
     --spacing-md: 2rem;
     --spacing-lg: 4rem;
     --spacing-xl: 8rem;
-    
+
+    /* Bölüm aralığı — pazaryerinde tanıtım sitesinden daha sıkı olmalı */
+    --section-gap: 3.5rem;
+
+    /* Köşe yarıçapı */
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --radius-pill: 999px;
+
+    /* Gölge */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+
     /* Layout */
-    --container-width: 1200px;
-    --header-height: 80px;
-    
+    --container-width: 1280px;
+    --header-height: 72px;
+
     /* Transitions */
     --transition-fast: 0.2s ease;
     --transition-normal: 0.3s ease;

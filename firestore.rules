@@ -4,42 +4,105 @@ rules_version = '2';
 // Firestore Güvenlik Kuralları — Firebase Konsol > Firestore Database > Rules
 // içine bu kuralları KOPYALAYIN ve "Yayınla" deyin.
 //
-// >>> ÖNEMLİ: Aşağıdaki adminEmails() listesine yetkili admin maillerinizi
-//     yazın. js/firebase-config.js içindeki ADMIN_EMAILS ile AYNI olmalı.
-//     Gerçek güvenlik BURADA sağlanır; istemci tarafı kontrol yalnızca arayüz içindir.
+// İKİ KADEMELİ YETKİ:
+//   • SÜPER ADMIN  → aşağıdaki superAdminEmails() listesi.
+//                    Mağaza açar/siler, mağazaya yönetici atar, her şeyi yönetir.
+//                    Bu liste js/firebase-config.js ADMIN_EMAILS ile AYNI olmalı.
+//   • MAĞAZA ADMİNİ → stores/{id}.adminEmails dizisinde adı geçenler.
+//                    YALNIZCA kendi mağazasının ürünlerini yönetir.
+//                    adminEmails ve active alanlarına DOKUNAMAZ (yetki yükseltme engeli).
+//
+// NOT: Rules dilinde string üzerinde .lower() YOKTUR. Bu yüzden e-postalar
+// admin panelinde yazılırken küçük harfe çevrilir; burada ham karşılaştırılır.
+// (Google hesaplarında e-posta zaten küçük harf döner.)
 // ===========================================================================
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function adminEmails() {
-      // >>> BURAYA admin maillerinizi yazın <<<
+    // ---- Süper adminler: js/firebase-config.js ADMIN_EMAILS ile AYNI olmalı ----
+    function superAdminEmails() {
       return [
-        // "ornek@gmail.com"
+        "osmangundemir1@gmail.com",
+        "ab.sametdundar@gmail.com",
+        "abdsametdundar84@gmail.com"
       ];
     }
 
-    function isAdmin() {
+    function isSuper() {
       return request.auth != null
-          && request.auth.token.email in adminEmails();
+          && request.auth.token.email in superAdminEmails();
     }
 
+    function storeExists(sid) {
+      return exists(/databases/$(database)/documents/stores/$(sid));
+    }
+
+    // Bu kullanıcı verilen mağazanın admini mi?
+    function isStoreAdmin(sid) {
+      return request.auth != null
+          && storeExists(sid)
+          && request.auth.token.email in
+             get(/databases/$(database)/documents/stores/$(sid)).data.adminEmails;
+    }
+
+    function canManage(sid) {
+      return isSuper() || isStoreAdmin(sid);
+    }
+
+    // ---------------- MAĞAZALAR ----------------
+    match /stores/{storeId} {
+      // Herkes okuyabilir: ana sayfadaki mağaza listesi + shop.html.
+      // adminEmails de görünür olur; bunlar zaten halka açık e-postalar.
+      allow read: if true;
+
+      // Mağaza oluşturma/silme YALNIZCA süper admin
+      allow create: if isSuper()
+                    && request.resource.data.name is string
+                    && request.resource.data.adminEmails is list
+                    && request.resource.data.active is bool;
+      allow delete: if isSuper();
+
+      // Güncelleme: süper admin her şeyi değiştirebilir.
+      // Mağaza admini yalnızca içerik alanlarını (banner, logo, WhatsApp...)
+      // değiştirebilir; adminEmails/active DEĞİŞTİREMEZ → yetki yükseltme engeli.
+      allow update: if isSuper()
+                    || (isStoreAdmin(storeId)
+                        && request.resource.data.adminEmails == resource.data.adminEmails
+                        && request.resource.data.active == resource.data.active);
+    }
+
+    // ---------------- ÜRÜNLER ----------------
     match /products/{productId} {
       // Müşteriler ürünleri okuyabilir (giriş gerekmez)
       allow read: if true;
-      // Yalnızca yetkili adminler yazabilir / silebilir
-      allow create, update, delete: if isAdmin();
+
+      // Oluştururken: storeId zorunlu + o mağazayı yönetebiliyor olmalı
+      allow create: if request.resource.data.storeId is string
+                    && canManage(request.resource.data.storeId);
+
+      // Güncellerken: ürün BAŞKA MAĞAZAYA TAŞINAMAZ
+      allow update: if canManage(resource.data.storeId)
+                    && request.resource.data.storeId == resource.data.storeId;
+
+      allow delete: if canManage(resource.data.storeId);
     }
 
+    // ---------------- SİPARİŞLER ----------------
     match /orders/{orderId} {
       // Sipariş linkine (key'e) sahip herkes okuyabilir.
       // Key rastgele/tahmin edilemez olduğu için pratikte sadece link sahibi erişir.
       allow read: if true;
-      // Müşteriler sipariş oluşturabilir (giriş yok). Temel doğrulama:
-      // items dizi, total sayı olmalı; var olan sipariş değiştirilemez/silinemez.
+
+      // Müşteriler sipariş oluşturabilir (giriş yok). Temel doğrulama +
+      // storeId gerçekten var olan bir mağazayı göstermeli (spam engeli).
       allow create: if request.resource.data.items is list
-                    && request.resource.data.total is number;
-      allow update, delete: if isAdmin();
+                    && request.resource.data.total is number
+                    && request.resource.data.storeId is string
+                    && storeExists(request.resource.data.storeId);
+
+      // Var olan sipariş değiştirilemez/silinemez
+      allow update, delete: if isSuper();
     }
   }
 }
