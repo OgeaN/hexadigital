@@ -15,18 +15,30 @@ import { ROBOTO_BOLD_B64 } from "./fonts/Roboto-Bold-normal.js";
 
 // Marka rengi (variables.css --color-primary)
 const BRAND = [159, 238, 28];
+// Koyu marka tonu — açık marka yeşili beyaz kâğıtta okunmuyor,
+// bu yüzden beyaz zemine basılan metinlerde bu kullanılır.
+const BRAND_DARK = [90, 140, 10];
 const DARK = [14, 17, 13];
 const GRAY = [120, 120, 120];
 
 // Yerleşim (mm, A4 = 210 × 297)
 const MARGIN = 15;
 const HEADER_H = 34;   // başlık bandı yüksekliği
-const ROW_H = 30;      // ürün satırı yüksekliği
+const ROW_H = 32;      // ürün satırı yüksekliği (seçim satırına da yer bırakır)
 const BOX = 26;        // görsel kutusu (kare); görsel oranı korunarak içine sığdırılır
 const LOGO_BOX = 22;   // başlıktaki mağaza logosu kutusu
 
 function formatPrice(n) {
     return Number(n).toLocaleString("tr-TR");
+}
+
+/** Müşteri numarası: "5354101826" → "0535 410 18 26" */
+function formatTrPhone(raw) {
+    const d = String(raw || "").replace(/\D/g, "");
+    if (d.length === 10 && d.startsWith("5")) {
+        return `0${d.slice(0, 3)} ${d.slice(3, 6)} ${d.slice(6, 8)} ${d.slice(8)}`;
+    }
+    return d ? "0" + d : "";
 }
 
 /** "905354101826" → "+90 535 410 18 26" */
@@ -314,6 +326,34 @@ export async function buildOrderPdf(items, opts = {}) {
 
     let y = HEADER_H + 10;
 
+    // ---- Sipariş sahibi ----
+    // Eski siparişlerde `customer` yoktur → blok hiç basılmaz.
+    const customer = opts.customer;
+    if (customer?.name) {
+        const boxH = 16;
+        doc.setFillColor(245, 245, 245);
+        doc.roundedRect(MARGIN, y, pageW - MARGIN * 2, boxH, 2, 2, "F");
+
+        doc.setFont(FONT, "bold");
+        doc.setFontSize(8);
+        doc.setTextColor(...GRAY);
+        doc.text("SİPARİŞ SAHİBİ", MARGIN + 4, y + 5.5);
+
+        doc.setFont(FONT, "bold");
+        doc.setFontSize(11);
+        doc.setTextColor(...DARK);
+        doc.text(customer.name, MARGIN + 4, y + 12);
+
+        const custPhone = formatTrPhone(customer.phone);
+        if (custPhone) {
+            doc.setFont(FONT, "normal");
+            doc.setFontSize(10);
+            doc.text(custPhone, pageW - MARGIN - 4, y + 12, { align: "right" });
+        }
+
+        y += boxH + 8;
+    }
+
     // ---- Ürün satırları ----
     doc.setTextColor(...DARK);
 
@@ -343,11 +383,23 @@ export async function buildOrderPdf(items, opts = {}) {
         doc.setTextColor(...DARK);
         doc.text(`${i + 1}. ${item.name}`, itemX, y + 8);
 
+        // Müşterinin seçimleri (renk vb.) — varsa adın hemen altında.
+        // Satır yüksekliği sabit olduğu için adet satırı bir tık aşağı kayar.
+        const sel = item.selectionsLabel || "";
+        let metaY = y + 16;
+        if (sel) {
+            doc.setFont(FONT, "normal");
+            doc.setFontSize(9);
+            doc.setTextColor(...BRAND_DARK);
+            doc.text(sel, itemX, y + 14);
+            metaY = y + 21;
+        }
+
         // Adet x birim fiyat
         doc.setFont(FONT, "normal");
         doc.setFontSize(10);
         doc.setTextColor(...GRAY);
-        doc.text(`${item.qty} adet × ${formatPrice(item.price)} TL`, itemX, y + 16);
+        doc.text(`${item.qty} adet × ${formatPrice(item.price)} TL`, itemX, metaY);
 
         // Satır toplamı (sağda)
         const lineTotal = (Number(item.price) || 0) * item.qty;
@@ -359,12 +411,58 @@ export async function buildOrderPdf(items, opts = {}) {
         y += ROW_H;
     }
 
-    // ---- Toplam ----
-    if (y + 20 > pageH - 20) { doc.addPage(); y = MARGIN; }
+    // ---- Ara toplam / indirim / toplam ----
+    // İndirim yoksa (eski siparişler dahil) yalnızca "Toplam" basılır.
+    const discount = opts.discount && opts.discount.amount > 0 ? opts.discount : null;
+    const subtotal = discount
+        ? (typeof opts.subtotal === "number" ? opts.subtotal : total + discount.amount)
+        : total;
+
+    // İndirimli özet ek satırlar kaplar (toptan dökümü dahil)
+    const discountLines = discount && Array.isArray(discount.lines) ? discount.lines : [];
+    const totalsH = discount ? 34 + discountLines.length * 6 : 20;
+    if (y + totalsH > pageH - 20) { doc.addPage(); y = MARGIN; }
+
     doc.setDrawColor(...DARK);
     doc.setLineWidth(0.5);
     doc.line(MARGIN, y, pageW - MARGIN, y);
-    y += 10;
+    y += 8;
+
+    if (discount) {
+        doc.setFont(FONT, "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(...GRAY);
+        doc.text("Ara Toplam", MARGIN, y);
+        doc.text(`${formatPrice(subtotal)} TL`, pageW - MARGIN, y, { align: "right" });
+        y += 7;
+
+        // İndirim satırı marka renginde — PDF'te de gözle seçilsin.
+        // Sepet geneli oran yoksa indirim yalnızca toptan kurallardan gelir.
+        const label = discount.percent
+            ? `İndirim (%${discount.percent})`
+            : (discount.label || "Toptan alış indirimi");
+
+        doc.setFont(FONT, "bold");
+        doc.setTextColor(...BRAND_DARK);
+        doc.text(label, MARGIN, y);
+        doc.text(`- ${formatPrice(discount.amount)} TL`, pageW - MARGIN, y, { align: "right" });
+        y += 6;
+
+        // Toptan indirimlerin ürün bazlı dökümü
+        doc.setFont(FONT, "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(...GRAY);
+        for (const l of discountLines) {
+            doc.text(`   ${l.name} × ${l.qty} (%${l.percent})`, MARGIN, y);
+            doc.text(`- ${formatPrice(l.amount)} TL`, pageW - MARGIN, y, { align: "right" });
+            y += 6;
+        }
+
+        y += 3;
+    } else {
+        y += 2;
+    }
+
     doc.setFont(FONT, "bold");
     doc.setFontSize(14);
     doc.setTextColor(...DARK);

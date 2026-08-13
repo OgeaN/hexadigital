@@ -82,9 +82,9 @@
     overflow: hidden;
 }
 
-/* Çoklu görselli kartlarda tıklayınca büyür */
-.product-card__media[data-images] {
-    cursor: zoom-in;
+/* Detay popup'ı açan kartlar (mağaza sayfası) */
+.product-card--clickable {
+    cursor: pointer;
 }
 
 /* Tek görselli / placeholder durumundaki <img> */
@@ -346,6 +346,13 @@
     font-weight: 600;
 }
 
+/* Seçimli üründe varyant ("Renk: Siyah") */
+.cart-item__sel {
+    color: var(--color-text-dim);
+    font-size: 0.78rem;
+    margin: 0.1rem 0;
+}
+
 .cart-item__remove {
     background: none;
     border: none;
@@ -397,6 +404,41 @@
     border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* İndirim özeti — ara toplam + indirim satırı (mağaza kuralı varsa) */
+.cart-summary {
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.cart-summary__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--spacing-xs);
+    font-size: 0.92rem;
+    color: var(--color-text-muted);
+}
+
+.cart-summary__row + .cart-summary__row { margin-top: 0.3rem; }
+
+.cart-summary__row--discount {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Bir sonraki kademeye teşvik */
+.cart-nudge {
+    margin-bottom: 0.6rem;
+    padding: 0.5rem 0.7rem;
+    border: 1px dashed var(--color-primary-line);
+    border-radius: var(--radius-sm);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    font-size: 0.82rem;
+    text-align: center;
+}
+
 .cart-total {
     display: flex;
     justify-content: space-between;
@@ -408,6 +450,46 @@
 .cart-total strong {
     color: var(--color-primary);
     font-size: 1.4rem;
+}
+
+/* Sipariş sahibi formu — sepet çekmecesinde, sipariş butonunun üstünde */
+.cart-customer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: var(--spacing-xs);
+}
+
+.cart-customer__label {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    letter-spacing: 0.03em;
+}
+
+.cart-customer__input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    background: var(--color-surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+}
+
+.cart-customer__input::placeholder { color: var(--color-text-dim); }
+
+.cart-customer__input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.cart-customer__input.invalid { border-color: var(--color-danger); }
+
+.cart-customer__err {
+    margin: 0;
+    color: var(--color-danger);
+    font-size: 0.78rem;
 }
 
 .cart-checkout {
@@ -575,6 +657,7 @@
 .form-row input[type="text"],
 .form-row input[type="number"],
 .form-row input[type="url"],
+.form-row select,
 .form-row textarea {
     width: 100%;
     padding: 0.7rem 0.9rem;
@@ -587,6 +670,7 @@
 }
 
 .form-row input:focus,
+.form-row select:focus,
 .form-row textarea:focus {
     outline: none;
     border-color: var(--color-primary);
@@ -623,6 +707,130 @@
     gap: var(--spacing-sm);
     margin-top: var(--spacing-md);
 }
+
+/* ---------- Kategoriye özel ürün bilgisi alanları (admin) ---------- */
+.spec-fields {
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--color-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.spec-fields__heading {
+    margin: 0 0 0.2rem;
+    font-size: 0.95rem;
+    color: var(--color-primary);
+}
+
+.spec-unit {
+    color: var(--color-text-dim);
+    font-size: 0.78rem;
+}
+
+/* ---------- Seçimli ürün: seçenek grupları (admin) ---------- */
+.option-groups {
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--color-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.option-group {
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    background: var(--color-surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.option-group__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.option-add {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.option-add select {
+    flex: 1;
+    min-width: 180px;
+    padding: 0.5rem 0.7rem;
+    background: var(--color-surface-2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+}
+
+/* ---------- Sepet indirim kuralları (admin) ---------- */
+.discount-rule {
+    margin-bottom: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--color-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.discount-rule__main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.discount-rule__type {
+    flex-shrink: 0;
+    padding: 0.45rem 0.6rem;
+    background: var(--color-surface-2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+}
+
+.discount-rule__hint {
+    margin: 0.45rem 0 0;
+    font-size: 0.76rem;
+}
+
+/* Satır içi sayı kutuları — .form-row genişliğini devralmasınlar */
+.discount-rule input[type="number"] {
+    width: 110px;
+    flex-shrink: 0;
+    padding: 0.45rem 0.6rem;
+    background: var(--color-surface-2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-family: var(--font-main);
+    font-size: 0.95rem;
+}
+
+.discount-rule input[type="number"]:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.discount-rule__lead,
+.discount-rule__sep {
+    color: var(--color-text-muted);
+    font-size: 0.88rem;
+}
+
+.discount-rule > .btn { margin-left: auto; }
+
+.discount-empty { margin-top: 0; }
 
 /* Admin ürün listesi */
 .admin-list {
@@ -790,6 +998,45 @@
     text-decoration: underline;
 }
 
+/* Sipariş sahibi kartı (sipariş detay sayfası) */
+.order-customer {
+    margin-bottom: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    background: var(--color-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.order-customer__title {
+    margin-bottom: 0.5rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-dim);
+}
+
+.order-customer__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-xs);
+}
+
+.order-customer__row + .order-customer__row { margin-top: 0.35rem; }
+
+.order-customer__label {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.order-customer__row a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.order-customer__row a:hover { text-decoration: underline; }
+
 .order-items {
     display: flex;
     flex-direction: column;
@@ -836,12 +1083,55 @@
     font-size: 0.9rem;
 }
 
+/* Müşterinin sepete eklerken yaptığı seçimler */
+.order-item__sel {
+    color: var(--color-primary);
+    font-size: 0.82rem;
+    margin: 0.15rem 0;
+}
+
 .order-item__total {
     color: var(--color-primary);
     font-weight: 700;
     font-size: 1.1rem;
     white-space: nowrap;
     flex-shrink: 0;
+}
+
+/* Ara toplam + indirim (indirimli siparişlerde) */
+.order-summary {
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.order-summary__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--spacing-xs);
+    color: var(--color-text-muted);
+}
+
+.order-summary__row + .order-summary__row { margin-top: 0.35rem; }
+
+.order-summary__row--discount {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+/* Toptan indirimlerin ürün bazlı dökümü — indirim satırının altında */
+.order-summary__row--sub {
+    padding-left: var(--spacing-sm);
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--color-text-dim);
+}
+
+/* İndirim özeti varken toplamın üstünde ikinci bir çizgi olmasın */
+.order-summary + .order-total {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
 }
 
 .order-total {
@@ -860,85 +1150,413 @@
 }
 
 /* ==========================================================================
-   LIGHTBOX (görsel büyütme + galeri)
+   ÜRÜN DETAY POPUP'I (product-modal.js)
+   Sol: uzunlamasına görsel galerisi (ok/thumb geçişli)
+   Sağ: ad, fiyat, açıklama, özellik tablosu + altta "Sepete Ekle"
    ========================================================================== */
 
-.lightbox {
+.pm-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.82);
+    backdrop-filter: blur(4px);
     display: flex;
-    align-items: center;
+    /* `align-items: center` YERİNE dialog'da margin:auto — ortalama aynı,
+       ama dialog viewport'tan uzun olduğunda üst kenarı kırpılmaz
+       (ortalanmış flex item yukarı taşarsa o kısma kaydırılamıyor). */
     justify-content: center;
+    padding: var(--spacing-sm);
+    /* Dialog kısa bir pencereye sığmazsa sayfa değil overlay kaysın */
+    overflow-y: auto;
     opacity: 0;
     visibility: hidden;
     transition: opacity var(--transition-normal), visibility var(--transition-normal);
     z-index: 2000;
 }
 
-.lightbox.open {
+.pm-overlay.open {
     opacity: 1;
     visibility: visible;
 }
 
-.lb-img {
-    max-width: 90vw;
-    max-height: 85vh;
-    object-fit: contain;
-    border-radius: 6px;
-    box-shadow: 0 10px 60px rgba(0, 0, 0, 0.6);
+/* Popup açıkken arka plan kaymasın */
+body.pm-lock { overflow: hidden; }
+
+.pm-dialog {
+    position: relative;
+    margin: auto;              /* dikey+yatay ortalama (overlay notuna bakın) */
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    /* Tek satır, dialog yüksekliğini paylaşır. Satır `auto` bırakılırsa
+       büyük bir görsel kendi doğal boyutuna şişip max-height'i aşıyor ve
+       "Sepete Ekle" barını dışarı itiyordu. */
+    grid-template-rows: minmax(0, 1fr);
+    width: min(1040px, 100%);
+    /* Somut yükseklik şart: satır 1fr'ı ancak ata yüksekliği belliyse
+       hesaplayabilir. Yalnız max-height verilirse satır içeriğe göre
+       çözümlenip dialog eziliyordu. */
+    height: min(88vh, 760px);
+    /* Çok kısa pencerelerde (yatay mobil, küçük laptop) galeri ve bilgi
+       bölümü ezilmesin — gerekirse sayfa değil dialog içi kaysın. */
+    min-height: 420px;
+    background: var(--color-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    transform: translateY(14px) scale(0.98);
+    transition: transform var(--transition-normal);
 }
 
-.lb-close {
+.pm-overlay.open .pm-dialog {
+    transform: none;
+}
+
+.pm-close {
     position: absolute;
-    top: 18px;
-    right: 24px;
-    background: none;
+    top: 10px;
+    right: 12px;
+    z-index: 3;
+    width: 36px;
+    height: 36px;
     border: none;
-    color: #fff;
-    font-size: 2.4rem;
-    line-height: 1;
-    cursor: pointer;
-    opacity: 0.8;
-}
-
-.lb-close:hover { opacity: 1; }
-
-.lb-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 52px;
-    height: 52px;
     border-radius: 50%;
-    border: none;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.55);
     color: #fff;
-    font-size: 1.5rem;
+    font-size: 1.6rem;
+    line-height: 1;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background var(--transition-fast);
+    transition: background var(--transition-fast), color var(--transition-fast);
 }
 
-.lb-nav:hover {
+.pm-close:hover {
     background: var(--color-primary);
     color: var(--color-bg);
 }
 
-.lb-prev { left: 20px; }
-.lb-next { right: 20px; }
+/* ---------- Sol: galeri ---------- */
+.pm-gallery {
+    position: relative;
+    background: var(--color-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    /* Grid alanını aşmasın — içerideki .pm-stage kendi payına düşeni alsın */
+    min-height: 0;
+    overflow: hidden;
+}
 
-.lb-counter {
+.pm-stage {
+    /* flex-basis 0: görselin doğal boyutu satır yüksekliğini belirlemesin,
+       kalan alanı paylaşsın (flex:1 tek başına `basis:auto` bırakıyordu) */
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-sm);
+    /* Sıfıra inip küçük görsellerin sayaç/oklarla çakışmasını engeller */
+    min-height: 180px;
+    overflow: hidden;
+}
+
+.pm-img {
+    max-width: 100%;
+    /* Yüzde yerine mutlak sınır: yüzdeli max-height, yüksekliği içeriğe
+       bağlı bir ataya karşı çözümlenemeyip yok sayılabiliyor. */
+    max-height: 100%;
+    height: auto;
+    width: auto;
+    min-height: 0;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
+}
+
+.pm-placeholder {
+    color: var(--color-text-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pm-nav {
     position: absolute;
-    bottom: 22px;
-    left: 0;
-    right: 0;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.8);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.pm-nav:hover {
+    background: var(--color-primary);
+    color: var(--color-bg);
+}
+
+.pm-nav--prev { left: 12px; }
+.pm-nav--next { right: 12px; }
+
+.pm-counter {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    background: rgba(0, 0, 0, 0.55);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+}
+
+.pm-thumbs {
+    display: flex;
+    gap: 6px;
+    padding: 0 var(--spacing-sm) var(--spacing-sm);
+    overflow-x: auto;
+    flex-shrink: 0;
+}
+
+.pm-thumb {
+    flex-shrink: 0;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    background: none;
+    cursor: pointer;
+    overflow: hidden;
+    opacity: 0.55;
+    transition: opacity var(--transition-fast), border-color var(--transition-fast);
+}
+
+.pm-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.pm-thumb:hover { opacity: 0.85; }
+
+.pm-thumb.active {
+    opacity: 1;
+    border-color: var(--color-primary);
+}
+
+/* ---------- Sağ: bilgiler ---------- */
+.pm-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.pm-info__scroll {
+    /* basis 0 → uzun açıklama/özellik tablosu barı aşağı itmek yerine
+       kendi içinde kaysın; "Sepete Ekle" her zaman görünür kalsın */
+    flex: 1 1 0;
+    overflow-y: auto;
+    padding: var(--spacing-md) var(--spacing-md) var(--spacing-sm);
+}
+
+.pm-category {
+    display: inline-block;
+    margin-bottom: var(--spacing-xs);
+    padding: 3px 10px;
+    border: 1px solid var(--color-primary-line);
+    border-radius: var(--radius-pill);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.pm-title {
+    margin: 0 0 var(--spacing-xs);
+    font-size: 1.6rem;
+    line-height: 1.25;
+    padding-right: 2.5rem;   /* × butonunun altına girmesin */
+}
+
+.pm-price {
+    color: var(--color-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-sm);
+}
+
+.pm-desc {
+    color: var(--color-text-muted);
+    line-height: 1.7;
+    white-space: pre-line;   /* açıklamadaki satır sonları korunsun */
+    margin-bottom: var(--spacing-sm);
+}
+
+/* ---------- Seçenekler (renk vb.) — sepete eklemeden önce ---------- */
+.pm-options {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border);
+}
+
+.pm-option + .pm-option { margin-top: var(--spacing-sm); }
+
+.pm-option__label {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
     font-size: 0.9rem;
-    letter-spacing: 0.05em;
+    color: var(--color-text);
+    font-weight: 500;
+}
+
+.pm-option__req { color: var(--color-danger); }
+
+.pm-option__picked {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.pm-option__values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.pm-chip {
+    padding: 6px 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-2);
+    color: var(--color-text-muted);
+    font-family: var(--font-main);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: border-color var(--transition-fast),
+                background var(--transition-fast), color var(--transition-fast);
+}
+
+.pm-chip:hover {
+    border-color: var(--color-primary-line);
+    color: var(--color-text);
+}
+
+.pm-chip.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-bg);
+    font-weight: 600;
+}
+
+/* Zorunlu seçim yapılmadan sepete eklenmeye çalışılınca */
+.pm-option--missing .pm-option__label { color: var(--color-danger); }
+
+.pm-option--missing .pm-option__values {
+    padding: 6px;
+    margin: -6px;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 1px var(--color-danger);
+}
+
+.pm-warn {
+    flex: 1;
+    color: var(--color-danger);
+    font-size: 0.82rem;
+    align-self: center;
+}
+
+/* ---------- Özellik tablosu ---------- */
+.pm-specs {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border);
+}
+
+.pm-specs__heading {
+    margin: 0 0 var(--spacing-xs);
+    font-size: 1rem;
+    color: var(--color-text);
+}
+
+.pm-specs__list {
+    margin: 0;
+    display: grid;
+    gap: 1px;
+    background: var(--border-soft);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.pm-spec {
+    display: grid;
+    grid-template-columns: minmax(120px, 40%) 1fr;
+    gap: var(--spacing-xs);
+    padding: 8px 12px;
+    background: var(--color-surface-2);
+}
+
+.pm-spec dt {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.pm-spec dd {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+/* ---------- Alt aksiyon ---------- */
+.pm-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-top: 1px solid var(--border);
+    background: var(--color-surface);
+    flex-shrink: 0;
+}
+
+.pm-add { min-width: 160px; }
+
+/* ---------- Mobil: tek sütun, galeri üstte ---------- */
+@media (max-width: 768px) {
+    .pm-dialog {
+        grid-template-columns: 1fr;
+        /* Galeri üstte, bilgi altta. Bilgi bölümü kendi içinde kayar —
+           "Sepete Ekle" barı hep görünür kalır. */
+        grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        height: 92vh;
+    }
+
+    .pm-gallery {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .pm-info__scroll { padding: var(--spacing-sm); }
+    .pm-actions { padding: var(--spacing-xs) var(--spacing-sm); }
+    .pm-add { flex: 1; }
+    .pm-title { font-size: 1.3rem; }
 }
 
 /* ==========================================================================
@@ -1107,13 +1725,16 @@
         grid-template-columns: 1fr;
     }
 
-    .lb-nav {
-        width: 42px;
-        height: 42px;
-        font-size: 1.2rem;
+    .pm-nav {
+        width: 34px;
+        height: 34px;
+        font-size: 1rem;
     }
-    .lb-prev { left: 8px; }
-    .lb-next { right: 8px; }
+    .pm-nav--prev { left: 8px; }
+    .pm-nav--next { right: 8px; }
+
+    /* İndirim kuralı satırı dar ekranda alt alta insin */
+    .discount-rule input[type="number"] { width: 90px; }
 
     .admin-row {
         flex-wrap: wrap;

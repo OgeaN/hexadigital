@@ -29,7 +29,7 @@ export const PLACEHOLDER_SVG = `
  * @param {object} [opts]
  * @param {string} [opts.storeLabel]  kartta gösterilecek mağaza adı (vitrin için)
  * @param {string} [opts.storeHref]   mağaza linki (vitrin için)
- * @param {boolean} [opts.zoomable]   görsele tıklayınca lightbox açılsın mı
+ * @param {boolean} [opts.clickable]  karta tıklayınca ürün detay popup'ı açılsın mı
  */
 export function productCardHtml(p, opts = {}) {
     const imgs = getImages(p);
@@ -45,10 +45,7 @@ export function productCardHtml(p, opts = {}) {
         const dots = imgs.length > 1
             ? `<div class="pc-dots">${imgs.map((_, idx) => `<span class="pc-dot${idx === 0 ? " active" : ""}"></span>`).join("")}</div>`
             : "";
-        const zoom = opts.zoomable
-            ? ` data-images="${esc(p.id)}" title="Büyütmek için tıkla"`
-            : "";
-        media = `<div class="product-card__media"${zoom}>${slides}${dots}</div>`;
+        media = `<div class="product-card__media">${slides}${dots}</div>`;
     }
 
     // Vitrin kartlarında ürünün hangi mağazaya ait olduğu görünsün
@@ -82,11 +79,17 @@ export function productCardHtml(p, opts = {}) {
 export function renderProductCards(grid, products, opts = {}) {
     grid.innerHTML = "";
     const cards = products.map((p, i) => {
+        const cardOpts = typeof opts === "function" ? opts(p) : opts;
         const card = document.createElement("article");
         card.className = "card product-card reveal";
+        // Tıklanabilir kartlarda imleç + "detay" ipucu (CSS bu sınıfa bakar)
+        if (cardOpts.clickable) {
+            card.classList.add("product-card--clickable");
+            card.title = "Detayları görmek için tıklayın";
+        }
         if (i % 3 === 1) card.classList.add("reveal-delay-1");
         if (i % 3 === 2) card.classList.add("reveal-delay-2");
-        card.innerHTML = productCardHtml(p, typeof opts === "function" ? opts(p) : opts);
+        card.innerHTML = productCardHtml(p, cardOpts);
         grid.appendChild(card);
         return card;
     });

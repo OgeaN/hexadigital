@@ -103,8 +103,7 @@ function renderFeatured(products) {
 
     renderProductCards(featuredGrid, products, (p) => ({
         storeLabel: p._store?.name || "",
-        storeHref: buildStoreShopUrl(p.storeId),
-        zoomable: false
+        storeHref: buildStoreShopUrl(p.storeId)
     }));
 
     setStatus(featuredStatus, "");

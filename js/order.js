@@ -10,6 +10,8 @@ import {
 import { db } from "./firebase-config.js";
 import { getCart, cartTotal, generateOrderKey } from "./cart.js";
 import { storeLogo, storeWhatsappNumber } from "./stores.js";
+import { discountSnapshot } from "./discount.js";
+import { selectionsLabel } from "./options.js";
 
 export const ORDERS_COLLECTION = "orders";
 
@@ -18,9 +20,10 @@ export const ORDERS_COLLECTION = "orders";
  * Mağaza bilgisi siparişe DENORMALIZE edilir: sipariş tarihsel bir kayıttır
  * (mağaza sonradan isim değiştirebilir) ve siparis.html tek getDoc ile çalışır.
  * @param {object} store - { id, name, whatsapp, logoUrl/logoUrls }
+ * @param {object} [customer] - { name, phone, phoneIntl } sipariş sahibi
  * @returns {Promise<{ key: string }>} oluşturulan siparişin key'i
  */
-export async function createOrder(store) {
+export async function createOrder(store, customer = null) {
     if (!store?.id) throw new Error("Mağaza bilgisi eksik.");
 
     const cart = getCart(store.id);
@@ -39,12 +42,27 @@ export async function createOrder(store) {
             name: i.name,
             price: Number(i.price) || 0,
             qty: i.qty,
-            imageUrl: i.imageUrl || ""
+            imageUrl: i.imageUrl || "",
+            // Müşterinin sepete eklerken yaptığı seçimler (renk vb.).
+            // Seçimsiz üründe alan hiç yazılmaz — eski siparişlerle aynı şekil.
+            ...(i.selections ? { selections: i.selections } : {}),
+            // Seçim etiketleri ürün silinse bile okunabilsin diye hazır metin
+            ...(i.selections ? { selectionsLabel: selectionsLabel(i.selections) } : {})
         }));
+
+        // İndirim de mağaza gibi ANLIK kopyalanır: mağaza kuralı sonradan
+        // değişse bile sipariş tutarı değişmemeli.
+        // `total` indirim SONRASI ödenecek tutardır (eski siparişlerde
+        // indirim yoktu; subtotal === total olduğu için uyumluluk korunur).
+        // Sepetin tamamı verilir — adet/çeşit/toptan kuralları da hesaplansın
+        const subtotal = cartTotal(store.id);
+        const discount = discountSnapshot(cart, store);
 
         await setDoc(refDoc, {
             items,
-            total: cartTotal(store.id),
+            subtotal,
+            discount,                                   // indirim yoksa null
+            total: subtotal - (discount?.amount || 0),
             currency: "TL",
             storeId: store.id,
             // Anlık kopya — mağaza sonradan değişse bile sipariş aynı kalır
@@ -53,6 +71,13 @@ export async function createOrder(store) {
                 whatsapp: storeWhatsappNumber(store),
                 logoUrl: storeLogo(store)
             },
+            // Sipariş sahibi — satıcı müşteriye ulaşabilsin.
+            // Eski siparişlerde bu alan yoktur → gösterim tarafı null'a hazırlıklı.
+            customer: customer ? {
+                name: customer.name || "",
+                phone: customer.phone || "",
+                phoneIntl: customer.phoneIntl || ""
+            } : null,
             createdAt: serverTimestamp()
         });
 

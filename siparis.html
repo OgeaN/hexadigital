@@ -74,8 +74,35 @@
                     </div>
                 </div>
 
+                <!-- Sipariş sahibi -->
+                <div class="order-customer" id="order-customer" style="display:none;">
+                    <div class="order-customer__title">Sipariş Sahibi</div>
+                    <div class="order-customer__row">
+                        <span class="order-customer__label">Ad Soyad</span>
+                        <span id="order-customer-name"></span>
+                    </div>
+                    <div class="order-customer__row">
+                        <span class="order-customer__label">Telefon</span>
+                        <a id="order-customer-phone" href="#"></a>
+                    </div>
+                </div>
+
                 <!-- Sipariş öğeleri -->
                 <div class="order-items" id="order-items"></div>
+
+                <!-- Ara toplam + indirim (yalnızca indirim uygulandıysa) -->
+                <div class="order-summary" id="order-summary" style="display:none;">
+                    <div class="order-summary__row">
+                        <span>Ara Toplam</span>
+                        <span id="order-subtotal-amount"></span>
+                    </div>
+                    <div class="order-summary__row order-summary__row--discount">
+                        <span id="order-discount-label">İndirim</span>
+                        <span id="order-discount-amount"></span>
+                    </div>
+                    <!-- Toptan (satır bazlı) indirimlerin dökümü -->
+                    <div id="order-discount-lines"></div>
+                </div>
 
                 <!-- Toplam -->
                 <div class="order-total" id="order-total" style="display:none;">

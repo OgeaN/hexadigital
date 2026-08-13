@@ -64,12 +64,26 @@ service cloud.firestore {
       allow delete: if isSuper();
 
       // Güncelleme: süper admin her şeyi değiştirebilir.
-      // Mağaza admini yalnızca içerik alanlarını (banner, logo, WhatsApp...)
-      // değiştirebilir; adminEmails/active DEĞİŞTİREMEZ → yetki yükseltme engeli.
+      //
+      // Mağaza admini yalnızca içerik alanlarını değiştirebilir. Yetki
+      // yükseltmeyi engellemek için KİLİTLİ alanlar tek tek korunur.
+      //
+      // NOT: `==` karşılaştırması alan SİLİNİRSE de yanlış sonuç verebilir
+      // (yok == yok). Bu yüzden diff().affectedKeys() ile hangi alanlara
+      // dokunulduğu doğrudan sınırlanır — silme de dahil hiçbir yolla
+      // kilitli alana erişilemez.
       allow update: if isSuper()
                     || (isStoreAdmin(storeId)
-                        && request.resource.data.adminEmails == resource.data.adminEmails
-                        && request.resource.data.active == resource.data.active);
+                        && !request.resource.data.diff(resource.data)
+                             .affectedKeys()
+                             .hasAny(storeLockedFields()));
+    }
+
+    // Mağaza admininin ASLA değiştiremeyeceği alanlar.
+    // adminEmails → başka birini yönetici yapıp yetki yükseltebilirdi.
+    // active      → süper adminin pasifleştirdiği mağazayı geri açabilirdi.
+    function storeLockedFields() {
+      return ["adminEmails", "active"].toSet();
     }
 
     // ---------------- ÜRÜNLER ----------------
@@ -79,30 +93,87 @@ service cloud.firestore {
 
       // Oluştururken: storeId zorunlu + o mağazayı yönetebiliyor olmalı
       allow create: if request.resource.data.storeId is string
-                    && canManage(request.resource.data.storeId);
+                    && canManage(request.resource.data.storeId)
+                    && validProduct();
 
-      // Güncellerken: ürün BAŞKA MAĞAZAYA TAŞINAMAZ
+      // Güncellerken: ürün BAŞKA MAĞAZAYA TAŞINAMAZ.
+      // Hem eski hem yeni mağaza yetkisi aranır — yetkili olduğu bir mağazaya
+      // başka mağazanın ürününü çekmeye çalışan istek de reddedilir.
       allow update: if canManage(resource.data.storeId)
-                    && request.resource.data.storeId == resource.data.storeId;
+                    && request.resource.data.storeId == resource.data.storeId
+                    && validProduct();
 
       allow delete: if canManage(resource.data.storeId);
     }
 
+    // Ürün gövdesi doğrulaması — bozuk veri mağaza sayfasını kırmasın.
+    function validProduct() {
+      let d = request.resource.data;
+      return d.name is string
+          && d.name.size() > 0
+          && d.name.size() <= 200
+          && d.price is number
+          && d.price >= 0
+          && d.visible is bool;
+    }
+
     // ---------------- SİPARİŞLER ----------------
     match /orders/{orderId} {
-      // Sipariş linkine (key'e) sahip herkes okuyabilir.
-      // Key rastgele/tahmin edilemez olduğu için pratikte sadece link sahibi erişir.
-      allow read: if true;
+      // TEK DOKÜMAN okuması serbest: sipariş linkine (key'e) sahip herkes
+      // görebilmeli, giriş yapmadan. Key 8 karakter rastgele üretilir
+      // (32^8 ≈ 1.1 trilyon) — pratikte yalnız link sahibi erişir.
+      //
+      // LİSTELEME (get yerine list) YASAK: `allow read` hem get hem list
+      // kapsar ve list ile tüm siparişler dökülebilirdi. Ayrıştırıldı.
+      allow get: if true;
+      allow list: if isSuper();
 
-      // Müşteriler sipariş oluşturabilir (giriş yok). Temel doğrulama +
-      // storeId gerçekten var olan bir mağazayı göstermeli (spam engeli).
-      allow create: if request.resource.data.items is list
-                    && request.resource.data.total is number
-                    && request.resource.data.storeId is string
-                    && storeExists(request.resource.data.storeId);
+      // Müşteriler giriş yapmadan sipariş oluşturabilir. Bu yüzden alanlar
+      // burada DOĞRULANIR — istemciye güvenilemez.
+      allow create: if validOrder();
 
-      // Var olan sipariş değiştirilemez/silinemez
+      // Var olan sipariş değiştirilemez/silinemez (tarihsel kayıt)
       allow update, delete: if isSuper();
+    }
+
+    // Sipariş gövdesi doğrulaması. İstemci JS'i atlanarak doğrudan API'ye
+    // istek atılabileceği için tutar/adet tutarlılığı burada zorlanır.
+    function validOrder() {
+      let d = request.resource.data;
+      return d.items is list
+          && d.items.size() > 0
+          && d.items.size() <= 200              // şişirilmiş doküman engeli
+          && d.total is number && d.total >= 0
+          && d.subtotal is number && d.subtotal >= 0
+          // Toplam, ara toplamı AŞAMAZ (indirim yalnızca düşürür)
+          && d.total <= d.subtotal
+          && d.storeId is string
+          && storeExists(d.storeId)
+          // İndirim ya yok (null) ya da tutarı ara toplamı aşmayan bir kayıt
+          && (d.discount == null || (
+                d.discount.amount is number
+                && d.discount.amount >= 0
+                && d.discount.amount <= d.subtotal
+             ))
+          // Sipariş sahibi: kişisel veri olduğu için boyutu sınırlanır
+          // (şişirilmiş metin / veri kaçırma engeli).
+          //
+          // Alan HİÇ YOKSA da geçerlidir: eski akışta müşteri bilgisi
+          // istenmiyordu. `d.customer == null` tek başına yetmez — o kontrol
+          // alan yokken hata verir, bu yüzden önce varlığı sorulur.
+          && (!("customer" in d) || d.customer == null || (
+                d.customer.name is string
+                && d.customer.name.size() > 0
+                && d.customer.name.size() <= 80
+                && d.customer.phone is string
+                && d.customer.phone.size() <= 15
+             ))
+          // Sipariş sonradan "ödendi/onaylandı" gibi alanlarla kirletilemesin:
+          // yalnızca bilinen alanlar kabul edilir.
+          && d.keys().hasOnly([
+                "items", "subtotal", "discount", "total", "currency",
+                "storeId", "store", "customer", "createdAt"
+             ]);
     }
   }
 }

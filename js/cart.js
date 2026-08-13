@@ -9,6 +9,7 @@
 // ============================================================================
 
 import { storeCartKey, storeWhatsappNumber } from "./stores.js";
+import { cartLineId } from "./options.js";
 
 // ----------------------------------------------------------------------------
 // Anahtar
@@ -47,21 +48,35 @@ export function saveCart(storeId, cart) {
 // ----------------------------------------------------------------------------
 
 /**
- * Ürünü sepete ekler. Zaten varsa adedini artırır.
- * product: { id, name, price, imageUrl }
+ * Ürünü sepete ekler. Aynı ürün+seçim zaten varsa adedini artırır.
+ *
+ * SEÇİMLİ ÜRÜNLER: Sepet satırı, ürün id'si ile seçimlerden üretilen bileşik
+ * bir anahtarla ayırt edilir (cartLineId). Böylece "siyah vazo" ve "beyaz
+ * vazo" ayrı satır olur; aksi hâlde ikincisi birincinin adedini artırırdı.
+ * Satırdaki `productId` korunur — sipariş/indirim tarafı asıl ürünü bilmeli.
+ *
+ * @param {object} product   { id, name, price, imageUrl }
+ * @param {number} qty
+ * @param {object} [selections]  { color: "Siyah" } gibi seçimler
  */
-export function addToCart(storeId, product, qty = 1) {
+export function addToCart(storeId, product, qty = 1, selections = null) {
     const cart = getCart(storeId);
-    const existing = cart.find(item => item.id === product.id);
+    const hasSel = selections && Object.keys(selections).length > 0;
+    const lineId = cartLineId(product.id, selections);
+
+    const existing = cart.find(item => item.id === lineId);
     if (existing) {
         existing.qty += qty;
     } else {
         cart.push({
-            id: product.id,
+            id: lineId,
+            productId: product.id,
             name: product.name,
             price: Number(product.price) || 0,
             imageUrl: product.imageUrl || "",
-            qty: qty
+            qty: qty,
+            // Seçimsiz ürünlerde alan hiç yazılmaz — eski sepetlerle aynı şekil
+            ...(hasSel ? { selections: { ...selections } } : {})
         });
     }
     saveCart(storeId, cart);
@@ -118,11 +133,15 @@ export function cartTotal(storeId) {
  * @param {string} [orderUrl] - verilirse mesaja sipariş sayfası linki eklenir.
  * @param {object} [store]    - verilirse mesaja mağaza adı eklenir.
  */
-export function buildWhatsappText(orderUrl, store) {
+export function buildWhatsappText(orderUrl, store, customer) {
     const lines = ["Merhaba, sipariş vermek istiyorum."];
     if (store?.name) {
         lines.push("");
         lines.push(`Mağaza: ${store.name}`);
+    }
+    // Satıcı mesajda kimin yazdığını doğrudan görsün
+    if (customer?.name) {
+        lines.push(`Ad Soyad: ${customer.name}`);
     }
     if (orderUrl) {
         lines.push("");
@@ -138,8 +157,9 @@ export function buildWhatsappText(orderUrl, store) {
  * yanlış telefona yönlendirmek yerine HATA verir.
  * @param {string} [orderUrl]
  * @param {object} store - { name, whatsapp }
+ * @param {object} [customer] - { name } sipariş sahibi
  */
-export function buildWhatsappUrl(orderUrl, store) {
+export function buildWhatsappUrl(orderUrl, store, customer) {
     const number = storeWhatsappNumber(store);
     if (!number) {
         throw new Error(
@@ -147,7 +167,7 @@ export function buildWhatsappUrl(orderUrl, store) {
             "Lütfen mağaza yöneticisiyle iletişime geçin."
         );
     }
-    const text = encodeURIComponent(buildWhatsappText(orderUrl, store));
+    const text = encodeURIComponent(buildWhatsappText(orderUrl, store, customer));
     return `https://wa.me/${number}?text=${text}`;
 }
 

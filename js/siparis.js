@@ -4,6 +4,7 @@
 // ============================================================================
 
 import { getOrder } from "./order.js";
+import { formatPhone as formatCustomerPhone } from "./customer.js";
 // pdf.js (jsPDF CDN) sadece PDF indirilirken yüklenir — sayfa render'ını bloklamasın
 
 const $ = id => document.getElementById(id);
@@ -11,6 +12,14 @@ const statusEl = $("order-status");
 const itemsEl = $("order-items");
 const totalEl = $("order-total");
 const totalAmountEl = $("order-total-amount");
+const summaryEl = $("order-summary");
+const subtotalAmountEl = $("order-subtotal-amount");
+const discountLabelEl = $("order-discount-label");
+const discountAmountEl = $("order-discount-amount");
+const discountLinesEl = $("order-discount-lines");
+const customerEl = $("order-customer");
+const customerNameEl = $("order-customer-name");
+const customerPhoneEl = $("order-customer-phone");
 const metaEl = $("order-meta");
 const btnPdf = $("btn-pdf");
 const storeEl = $("order-store");
@@ -105,6 +114,24 @@ function renderStore(order) {
     storeEl.style.display = "flex";
 }
 
+/** Sipariş sahibi bilgileri. Eski siparişlerde `customer` alanı yoktur. */
+function renderCustomer(order) {
+    const c = order.customer;
+    if (!c?.name) {
+        customerEl.style.display = "none";
+        return;
+    }
+
+    customerNameEl.textContent = c.name;
+
+    const pretty = formatCustomerPhone(c.phone);
+    customerPhoneEl.textContent = pretty || "—";
+    // Mobilde dokununca arama başlasın
+    customerPhoneEl.href = c.phoneIntl ? `tel:+${c.phoneIntl}` : "#";
+
+    customerEl.style.display = "";
+}
+
 function renderOrder(order) {
     statusEl.style.display = "none";
 
@@ -116,6 +143,7 @@ function renderOrder(order) {
         `Sipariş No: ${currentKey}${tarih ? " • " + tarih : ""}${storeName ? " • " + storeName : ""}`;
 
     renderStore(order);
+    renderCustomer(order);
 
     const items = order.items || [];
     itemsEl.innerHTML = items.map((item, i) => {
@@ -123,16 +151,46 @@ function renderOrder(order) {
             ? `<img class="order-item__img" src="${esc(item.imageUrl)}" alt="${esc(item.name)}">`
             : `<div class="order-item__img order-item__img--ph">${PLACEHOLDER}</div>`;
         const lineTotal = (Number(item.price) || 0) * item.qty;
+        // Sepete eklenirken yapılan seçimler (renk vb.) — eski siparişlerde yok
+        const sel = item.selectionsLabel || "";
         return `
             <div class="order-item">
                 ${media}
                 <div class="order-item__info">
                     <div class="order-item__name">${i + 1}. ${esc(item.name)}</div>
+                    ${sel ? `<div class="order-item__sel">${esc(sel)}</div>` : ""}
                     <div class="order-item__meta">${item.qty} adet × ${formatPrice(item.price)} TL</div>
                 </div>
                 <div class="order-item__total">${formatPrice(lineTotal)} TL</div>
             </div>`;
     }).join("");
+
+    // İndirim özeti — yalnızca indirimli siparişlerde. Eski siparişlerde
+    // `discount` alanı hiç yoktur; o durumda tek satırlık toplam gösterilir.
+    const discount = order.discount;
+    if (discount?.amount > 0) {
+        const subtotal = Number(order.subtotal) || (Number(order.total) + discount.amount);
+        subtotalAmountEl.textContent = `${formatPrice(subtotal)} TL`;
+
+        // Sepet geneli oran varsa yüzdeyi göster; yoksa indirim yalnızca
+        // toptan (satır bazlı) kurallardan geliyordur.
+        discountLabelEl.textContent = discount.percent
+            ? `İndirim (%${discount.percent})`
+            : (discount.label || "Toptan alış indirimi");
+        discountAmountEl.textContent = `−${formatPrice(discount.amount)} TL`;
+
+        // Satır bazlı toptan indirimleri tek tek listele
+        const lines = Array.isArray(discount.lines) ? discount.lines : [];
+        discountLinesEl.innerHTML = lines.map(l => `
+            <div class="order-summary__row order-summary__row--sub">
+                <span>${esc(l.name)} × ${l.qty} (%${l.percent})</span>
+                <span>−${formatPrice(l.amount)} TL</span>
+            </div>`).join("");
+
+        summaryEl.style.display = "";
+    } else {
+        summaryEl.style.display = "none";
+    }
 
     totalAmountEl.textContent = `${formatPrice(order.total)} TL`;
     totalEl.style.display = "flex";
@@ -150,9 +208,12 @@ btnPdf.addEventListener("click", async () => {
         const { buildOrderPdf } = await import("./pdf.js");
         const { doc, fileName, corsBlocked } = await buildOrderPdf(currentOrder.items, {
             total: currentOrder.total,
+            subtotal: currentOrder.subtotal,
+            discount: currentOrder.discount || null,
             orderKey: currentKey,
             storeId: currentOrder.storeId || "",
-            store: currentOrder.store || null
+            store: currentOrder.store || null,
+            customer: currentOrder.customer || null
         });
         doc.save(fileName);
 

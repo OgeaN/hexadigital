@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Admin Paneli | Hexadigital</title>
+    <title>Yönetim Paneli | Hexadigital</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,6 +18,7 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/shop.css">
+    <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
     <canvas id="hexa-bg"></canvas>
@@ -44,16 +45,16 @@
     </header>
 
     <main>
-        <section class="services" style="min-height: 70vh; padding-top: var(--spacing-md);">
+        <section class="admin-section">
             <div class="container">
 
-                <!-- 1) Yükleniyor durumu -->
+                <!-- 1) Yükleniyor -->
                 <div id="admin-loading" class="admin-message">Yükleniyor...</div>
 
-                <!-- 2) Giriş ekranı (oturum yokken) -->
+                <!-- 2) Giriş ekranı -->
                 <div id="admin-login" class="admin-login" style="display:none;">
-                    <h2 class="section-title">Admin Girişi</h2>
-                    <p>Ürünleri yönetmek için yetkili Google hesabınızla giriş yapın.</p>
+                    <h2 class="section-title">Yönetim Girişi</h2>
+                    <p>Mağazanızı yönetmek için yetkili Google hesabınızla giriş yapın.</p>
                     <button class="btn btn--primary btn-google" id="btn-google-signin">
                         <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C39.9 36.4 44 30.8 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>
                         Google ile Giriş Yap
@@ -61,208 +62,448 @@
                     <div id="login-error" class="admin-message error" style="display:none;"></div>
                 </div>
 
-                <!-- 3) Yönetim paneli (yetkili oturum) -->
+                <!-- 3) Panel -->
                 <div id="admin-panel" style="display:none;">
-                    <div class="admin-bar">
-                        <div class="admin-bar__user">
-                            Giriş: <strong id="admin-email"></strong>
-                        </div>
-                        <div style="display:flex; gap:0.5rem;">
-                            <button class="btn btn--ghost btn-sm" id="btn-signout">Çıkış Yap</button>
-                        </div>
-                    </div>
 
-                    <!-- ============ Sekmeler ============ -->
-                    <div class="admin-tabs" id="admin-tabs" role="tablist">
-                        <button type="button" class="admin-tab active" id="tab-btn-products"
-                                data-tab="products" role="tab">Ürünler</button>
-                        <button type="button" class="admin-tab" id="tab-btn-stores"
-                                data-tab="stores" role="tab" hidden>Mağazalar</button>
-                    </div>
-
-                    <!-- ============ SEKME: Ürünler ============ -->
-                    <div class="admin-tabpanel" id="tab-products" role="tabpanel">
-
-                    <!-- Hangi mağazanın ürünleri yönetiliyor? -->
-                    <div class="admin-scope" id="store-scope-row">
-                        <label for="store-select">Mağaza</label>
-                        <select id="store-select"></select>
-                        <button class="btn btn--ghost btn-sm" id="btn-seed">Örnek Verileri Yükle</button>
-                    </div>
-
-                    <!-- Ürün Ekle / Düzenle formu -->
-                    <form class="admin-form" id="product-form">
-                        <h3 id="form-heading">Yeni Ürün Ekle</h3>
-                        <input type="hidden" id="edit-id">
-
-                        <div class="form-row">
-                            <label for="p-name">Ürün Adı *</label>
-                            <input type="text" id="p-name" required placeholder="Örn: HexaBoard Pro">
-                        </div>
-
-                        <div class="form-row">
-                            <label for="p-desc">Açıklama</label>
-                            <textarea id="p-desc" placeholder="Kısa ürün açıklaması"></textarea>
-                        </div>
-
-                        <div class="form-grid">
-                            <div class="form-row">
-                                <label for="p-price">Fiyat (TL) *</label>
-                                <input type="number" id="p-price" required min="0" step="1" placeholder="1499">
-                            </div>
-                            <div class="form-row">
-                                <label>Görünürlük</label>
-                                <label class="form-check">
-                                    <input type="checkbox" id="p-visible" checked>
-                                    Mağazada görünsün
-                                </label>
+                    <!-- ===== Üst şerit: kimlik + mağaza kapsamı ===== -->
+                    <div class="admin-topbar">
+                        <div class="admin-topbar__identity">
+                            <span class="admin-avatar" id="admin-avatar"></span>
+                            <div>
+                                <div class="admin-topbar__email" id="admin-email"></div>
+                                <span class="admin-role" id="admin-role"></span>
                             </div>
                         </div>
 
-                        <!-- Düzenlemede: mevcut görseller (tıkla-sil) -->
-                        <div class="form-row" id="existing-images-row" style="display:none;">
-                            <label>Mevcut Görseller (kaldırmak için ×'e tıkla)</label>
-                            <div class="img-thumbs" id="existing-images"></div>
+                        <!-- Mağaza seçici: yalnızca birden fazla mağaza yönetenlerde -->
+                        <div class="admin-topbar__scope" id="store-scope-row">
+                            <label for="store-select">Yönetilen mağaza</label>
+                            <select id="store-select"></select>
                         </div>
 
-                        <div class="form-row">
-                            <label for="p-image-file">Görsel Yükle (birden fazla seçilebilir)</label>
-                            <input type="file" id="p-image-file" accept="image/*" multiple>
-                            <p class="form-hint">Firebase Storage'a yüklenir. Birden çok dosya seçebilirsiniz.</p>
+                        <div class="admin-topbar__actions">
+                            <a class="btn btn--ghost btn-sm" id="btn-view-store" href="#" target="_blank"
+                               rel="noopener">Mağazayı Gör</a>
+                            <button class="btn btn--ghost btn-sm" id="btn-signout">Çıkış</button>
                         </div>
+                    </div>
 
-                        <div class="form-row">
-                            <label for="p-image-urls">veya Görsel URL'leri (her satıra bir adet)</label>
-                            <textarea id="p-image-urls" rows="3" placeholder="https://...&#10;https://..."></textarea>
-                        </div>
+                    <div class="admin-layout">
+                        <!-- ===== Sol menü ===== -->
+                        <nav class="admin-nav" id="admin-nav" role="tablist" aria-label="Yönetim bölümleri">
+                            <p class="admin-nav__group">Mağazam</p>
+                            <button type="button" class="admin-nav__item active" data-tab="products" role="tab">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                                <span>Ürünler</span>
+                                <span class="admin-nav__count" id="nav-count-products"></span>
+                            </button>
+                            <button type="button" class="admin-nav__item" data-tab="discounts" role="tab">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>
+                                <span>İndirimler</span>
+                                <span class="admin-nav__count" id="nav-count-discounts"></span>
+                            </button>
+                            <button type="button" class="admin-nav__item" data-tab="storefront" role="tab">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9h18M3 9l1.5-4.5A2 2 0 0 1 6.4 3h11.2a2 2 0 0 1 1.9 1.5L21 9M5 9v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9"/></svg>
+                                <span>Mağaza Görünümü</span>
+                            </button>
 
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn--primary" id="btn-save">Kaydet</button>
-                            <button type="button" class="btn btn--ghost" id="btn-cancel" style="display:none;">İptal</button>
-                        </div>
-                        <div id="form-status" class="admin-message" style="display:none; text-align:left; padding-left:0;"></div>
-                    </form>
+                            <!-- Yalnızca süper admin -->
+                            <div id="admin-nav-super" hidden>
+                                <p class="admin-nav__group">Yönetici</p>
+                                <button type="button" class="admin-nav__item" data-tab="stores" role="tab">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                                    <span>Tüm Mağazalar</span>
+                                    <span class="admin-nav__count" id="nav-count-stores"></span>
+                                </button>
+                                <button type="button" class="admin-nav__item" data-tab="tools" role="tab">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a4 4 0 0 0 5 5l-9.4 9.4a2.1 2.1 0 0 1-3-3z"/></svg>
+                                    <span>Araçlar</span>
+                                </button>
+                            </div>
+                        </nav>
 
-                    <!-- Ürün listesi -->
-                    <h3 style="margin-bottom: var(--spacing-md);">Ürünler</h3>
-                    <div class="admin-list" id="admin-list"></div>
-                    <div id="list-status" class="admin-message">Yükleniyor...</div>
+                        <!-- ===== İçerik ===== -->
+                        <div class="admin-content">
 
-                    </div><!-- /#tab-products -->
+                        <!-- ============ ÜRÜNLER ============ -->
+                        <section class="admin-panel-tab" data-panel="products">
+                            <header class="panel-head">
+                                <div>
+                                    <h2 class="panel-head__title">Ürünler</h2>
+                                    <p class="panel-head__sub" id="products-scope-label"></p>
+                                </div>
+                                <button type="button" class="btn btn--primary" id="btn-new-product">
+                                    + Yeni Ürün
+                                </button>
+                            </header>
 
-                    <!-- ============ SEKME: Mağazalar (yalnızca süper admin) ============ -->
-                    <div class="admin-tabpanel" id="tab-stores" role="tabpanel" hidden>
+                            <!-- Ürün listesi (varsayılan görünüm) -->
+                            <div id="products-view">
+                                <div class="admin-toolbar">
+                                    <input type="search" id="product-search" class="admin-search"
+                                           placeholder="Ürünlerde ara..." autocomplete="off">
+                                </div>
+                                <div class="admin-list" id="admin-list"></div>
+                                <div id="list-status" class="admin-message">Yükleniyor...</div>
+                            </div>
 
-                        <!-- Mağaza Ekle / Düzenle formu -->
-                        <form class="admin-form" id="store-form">
-                            <h3 id="store-form-heading">Yeni Mağaza Ekle</h3>
-                            <input type="hidden" id="store-edit-id">
+                            <!-- Ürün formu (yalnızca ekle/düzenle sırasında) -->
+                            <form class="admin-card admin-form" id="product-form" style="display:none;">
+                                <div class="admin-card__head">
+                                    <h3 id="form-heading">Yeni Ürün</h3>
+                                    <button type="button" class="admin-card__close" id="btn-cancel"
+                                            aria-label="Kapat">&times;</button>
+                                </div>
 
-                            <div class="form-grid">
-                                <div class="form-row">
-                                    <label for="s-slug">Mağaza Kodu (slug) *</label>
-                                    <input type="text" id="s-slug" required placeholder="orn: sam3d">
-                                    <p class="form-hint">
-                                        Adreste kullanılır: <code>shop.html?store=sam3d</code>.
-                                        Küçük harf, rakam ve tire. <strong>Sonradan değiştirilemez.</strong>
+                                <input type="hidden" id="edit-id">
+
+                                <!-- --- Temel bilgiler --- -->
+                                <fieldset class="form-section">
+                                    <legend class="form-section__title">Temel Bilgiler</legend>
+
+                                    <div class="form-row">
+                                        <label for="p-name">Ürün Adı <span class="req">*</span></label>
+                                        <input type="text" id="p-name" required maxlength="200"
+                                               placeholder="Örn: Dekoratif Spiral Vazo">
+                                    </div>
+
+                                    <div class="form-grid">
+                                        <div class="form-row">
+                                            <label for="p-price">Fiyat (TL) <span class="req">*</span></label>
+                                            <input type="number" id="p-price" required min="0" step="1"
+                                                   placeholder="159">
+                                        </div>
+                                        <div class="form-row">
+                                            <label for="p-category">Kategori</label>
+                                            <select id="p-category">
+                                                <option value="">Kategorisiz</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <label for="p-desc">Açıklama</label>
+                                        <textarea id="p-desc" rows="3"
+                                                  placeholder="Ürünü kısaca tanıtın. Müşteri detay penceresinde görür."></textarea>
+                                    </div>
+
+                                    <label class="switch-row">
+                                        <input type="checkbox" id="p-visible" checked>
+                                        <span class="switch-row__text">
+                                            <strong>Mağazada görünsün</strong>
+                                            <small>Kapalıyken ürün müşterilere gösterilmez.</small>
+                                        </span>
+                                    </label>
+                                </fieldset>
+
+                                <!-- --- Görseller --- -->
+                                <fieldset class="form-section">
+                                    <legend class="form-section__title">Görseller</legend>
+
+                                    <div class="form-row" id="existing-images-row" style="display:none;">
+                                        <label>Mevcut görseller <small class="muted">— kaldırmak için ×</small></label>
+                                        <div class="img-thumbs" id="existing-images"></div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <label class="dropzone" for="p-image-file">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                            <span class="dropzone__text">Görsel seçmek için tıklayın</span>
+                                            <small class="dropzone__hint">Birden fazla seçebilirsiniz • En fazla 5 MB • JPG, PNG, WEBP</small>
+                                            <input type="file" id="p-image-file" accept="image/*" multiple hidden>
+                                        </label>
+                                        <div class="file-chosen" id="p-image-chosen"></div>
+                                    </div>
+
+                                    <details class="form-details">
+                                        <summary>Bunun yerine görsel bağlantısı (URL) kullan</summary>
+                                        <div class="form-row" style="margin-top:0.6rem;">
+                                            <textarea id="p-image-urls" rows="3"
+                                                      placeholder="https://...&#10;https://..."></textarea>
+                                            <p class="form-hint">Her satıra bir bağlantı.</p>
+                                        </div>
+                                    </details>
+                                </fieldset>
+
+                                <!-- --- Kategori bilgileri (specs.js şemasından) --- -->
+                                <fieldset class="form-section" id="spec-section" style="display:none;">
+                                    <legend class="form-section__title">Ürün Bilgileri</legend>
+                                    <p class="form-hint" style="margin-bottom:0.8rem;">
+                                        Tümü isteğe bağlı — doldurduklarınız müşteriye tablo hâlinde gösterilir.
+                                    </p>
+                                    <div class="spec-fields" id="p-spec-fields"></div>
+                                </fieldset>
+
+                                <!-- --- Seçimli ürün --- -->
+                                <fieldset class="form-section">
+                                    <legend class="form-section__title">Müşteri Seçimleri</legend>
+
+                                    <label class="switch-row">
+                                        <input type="checkbox" id="p-has-options">
+                                        <span class="switch-row__text">
+                                            <strong>Seçimli ürün</strong>
+                                            <small>Müşteri sepete eklemeden önce renk, boyut gibi bir seçim yapsın.</small>
+                                        </span>
+                                    </label>
+
+                                    <div class="option-groups" id="p-option-groups" style="display:none;">
+                                        <div id="p-option-list"></div>
+                                        <div class="option-add">
+                                            <select id="p-option-preset">
+                                                <option value="">Hazır seçenek...</option>
+                                            </select>
+                                            <button type="button" class="btn btn--ghost btn-sm" id="btn-add-option">
+                                                + Seçenek Ekle
+                                            </button>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <div class="form-actions form-actions--sticky">
+                                    <div id="form-status" class="form-status" style="display:none;"></div>
+                                    <button type="button" class="btn btn--ghost" id="btn-cancel-2">İptal</button>
+                                    <button type="submit" class="btn btn--primary" id="btn-save">Kaydet</button>
+                                </div>
+                            </form>
+                        </section>
+
+                        <!-- ============ İNDİRİMLER ============ -->
+                        <section class="admin-panel-tab" data-panel="discounts" hidden>
+                            <header class="panel-head">
+                                <div>
+                                    <h2 class="panel-head__title">Sepet İndirimleri</h2>
+                                    <p class="panel-head__sub" id="discounts-scope-label"></p>
+                                </div>
+                                <button type="button" class="btn btn--primary" id="btn-add-discount">
+                                    + İndirim Kuralı
+                                </button>
+                            </header>
+
+                            <div class="admin-note">
+                                <strong>Nasıl çalışır?</strong>
+                                Müşteri birden fazla koşulu karşılıyorsa <strong>en yüksek oranlı</strong>
+                                indirim uygulanır; oranlar birbirine eklenmez.
+                                “Aynı üründen adet” kuralı yalnızca o ürünün satırlarına uygulanır —
+                                farklı renkler aynı ürün sayılır.
+                            </div>
+
+                            <form id="discount-form">
+                                <div class="discount-rules" id="s-discount-rules"></div>
+                                <div class="form-actions">
+                                    <div id="discount-status" class="form-status" style="display:none;"></div>
+                                    <button type="submit" class="btn btn--primary" id="btn-save-discounts">
+                                        İndirimleri Kaydet
+                                    </button>
+                                </div>
+                            </form>
+                        </section>
+
+                        <!-- ============ MAĞAZA GÖRÜNÜMÜ (mağaza admini de düzenler) ============ -->
+                        <section class="admin-panel-tab" data-panel="storefront" hidden>
+                            <header class="panel-head">
+                                <div>
+                                    <h2 class="panel-head__title">Mağaza Görünümü</h2>
+                                    <p class="panel-head__sub" id="storefront-scope-label"></p>
+                                </div>
+                            </header>
+
+                            <form class="admin-card admin-form" id="storefront-form">
+                                <fieldset class="form-section">
+                                    <legend class="form-section__title">Mağaza Bilgileri</legend>
+
+                                    <div class="form-grid">
+                                        <div class="form-row">
+                                            <label for="sf-name">Mağaza Adı <span class="req">*</span></label>
+                                            <input type="text" id="sf-name" required placeholder="Örn: SAM 3D">
+                                        </div>
+                                        <div class="form-row">
+                                            <label for="sf-whatsapp">WhatsApp <span class="req">*</span></label>
+                                            <input type="text" id="sf-whatsapp" required inputmode="numeric"
+                                                   placeholder="905354101826">
+                                            <p class="form-hint">Yalnız rakam, ülke koduyla. Siparişler bu numaraya gider.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <label for="sf-tagline">Kısa Açıklama</label>
+                                        <input type="text" id="sf-tagline" placeholder="Mağaza adının altında görünür">
+                                    </div>
+                                </fieldset>
+
+                                <fieldset class="form-section">
+                                    <legend class="form-section__title">Logo</legend>
+                                    <div class="form-row" id="existing-logos-row" style="display:none;">
+                                        <div class="img-thumbs" id="existing-logos"></div>
+                                    </div>
+                                    <label class="dropzone dropzone--sm" for="sf-logo-file">
+                                        <span class="dropzone__text">Logo seç</span>
+                                        <small class="dropzone__hint">Kartta ve sipariş PDF'inde görünür</small>
+                                        <input type="file" id="sf-logo-file" accept="image/*" hidden>
+                                    </label>
+                                    <div class="file-chosen" id="sf-logo-chosen"></div>
+                                    <details class="form-details">
+                                        <summary>URL ile ekle</summary>
+                                        <textarea id="sf-logo-urls" rows="2" placeholder="https://..."
+                                                  style="margin-top:0.6rem;"></textarea>
+                                    </details>
+                                </fieldset>
+
+                                <fieldset class="form-section">
+                                    <legend class="form-section__title">Banner</legend>
+                                    <div class="form-row" id="existing-banners-row" style="display:none;">
+                                        <div class="img-thumbs" id="existing-banners"></div>
+                                    </div>
+                                    <label class="dropzone dropzone--sm" for="sf-banner-file">
+                                        <span class="dropzone__text">Banner seç</span>
+                                        <small class="dropzone__hint">Mağaza kartının arkaplanı • Geniş (16:10) önerilir</small>
+                                        <input type="file" id="sf-banner-file" accept="image/*" hidden>
+                                    </label>
+                                    <div class="file-chosen" id="sf-banner-chosen"></div>
+                                    <details class="form-details">
+                                        <summary>URL ile ekle</summary>
+                                        <textarea id="sf-banner-urls" rows="2" placeholder="https://..."
+                                                  style="margin-top:0.6rem;"></textarea>
+                                    </details>
+                                </fieldset>
+
+                                <div class="form-actions form-actions--sticky">
+                                    <div id="storefront-status" class="form-status" style="display:none;"></div>
+                                    <button type="submit" class="btn btn--primary" id="btn-storefront-save">
+                                        Kaydet
+                                    </button>
+                                </div>
+                            </form>
+                        </section>
+
+                        <!-- ============ TÜM MAĞAZALAR (süper admin) ============ -->
+                        <section class="admin-panel-tab" data-panel="stores" hidden>
+                            <header class="panel-head">
+                                <div>
+                                    <h2 class="panel-head__title">Tüm Mağazalar</h2>
+                                    <p class="panel-head__sub">
+                                        Mağaza açın, yönetici atayın, yayından kaldırın.
                                     </p>
                                 </div>
-                                <div class="form-row">
-                                    <label for="s-name">Mağaza Adı *</label>
-                                    <input type="text" id="s-name" required placeholder="Örn: SAM 3D">
-                                </div>
+                                <button type="button" class="btn btn--primary" id="btn-new-store">
+                                    + Yeni Mağaza
+                                </button>
+                            </header>
+
+                            <div id="stores-view">
+                                <div class="admin-list" id="store-list"></div>
+                                <div id="store-list-status" class="admin-message">Yükleniyor...</div>
                             </div>
 
-                            <div class="form-row">
-                                <label for="s-tagline">Kısa Açıklama</label>
-                                <input type="text" id="s-tagline" placeholder="Kartta adın altında görünür">
-                            </div>
-
-                            <div class="form-grid">
-                                <div class="form-row">
-                                    <label for="s-whatsapp">WhatsApp Numarası *</label>
-                                    <input type="text" id="s-whatsapp" required placeholder="905354101826">
-                                    <p class="form-hint">Uluslararası format, yalnız rakam. Başında + ve boşluk olmadan.</p>
+                            <!-- Mağaza formu — süper adminin açtığı/düzenlediği -->
+                            <form class="admin-card admin-form" id="store-form" style="display:none;">
+                                <div class="admin-card__head">
+                                    <h3 id="store-form-heading">Yeni Mağaza</h3>
+                                    <button type="button" class="admin-card__close" id="btn-store-cancel"
+                                            aria-label="Kapat">&times;</button>
                                 </div>
-                                <div class="form-row">
-                                    <label for="s-sort">Sıra</label>
-                                    <input type="number" id="s-sort" step="1" value="0" placeholder="0">
-                                    <label class="form-check" style="margin-top:0.5rem;">
+
+                                <input type="hidden" id="store-edit-id">
+
+                                <fieldset class="form-section">
+                                    <legend class="form-section__title">Kimlik</legend>
+                                    <div class="form-grid">
+                                        <div class="form-row">
+                                            <label for="s-slug">Mağaza Kodu <span class="req">*</span></label>
+                                            <input type="text" id="s-slug" required placeholder="sam3d">
+                                            <p class="form-hint">
+                                                Adreste kullanılır: <code>shop.html?store=sam3d</code>
+                                                <br><strong>Sonradan değiştirilemez.</strong>
+                                            </p>
+                                        </div>
+                                        <div class="form-row">
+                                            <label for="s-name">Mağaza Adı <span class="req">*</span></label>
+                                            <input type="text" id="s-name" required placeholder="SAM 3D">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-grid">
+                                        <div class="form-row">
+                                            <label for="s-whatsapp">WhatsApp <span class="req">*</span></label>
+                                            <input type="text" id="s-whatsapp" required inputmode="numeric"
+                                                   placeholder="905354101826">
+                                        </div>
+                                        <div class="form-row">
+                                            <label for="s-sort">Sıralama</label>
+                                            <input type="number" id="s-sort" step="1" value="0">
+                                            <p class="form-hint">Küçük sayı önce gösterilir.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <label for="s-tagline">Kısa Açıklama</label>
+                                        <input type="text" id="s-tagline" placeholder="Kartta adın altında görünür">
+                                    </div>
+
+                                    <label class="switch-row">
                                         <input type="checkbox" id="s-active" checked>
-                                        Ana sayfada görünsün
+                                        <span class="switch-row__text">
+                                            <strong>Yayında</strong>
+                                            <small>Kapalıyken mağaza ana sayfada listelenmez ve sayfası açılmaz.</small>
+                                        </span>
                                     </label>
-                                </div>
-                            </div>
+                                </fieldset>
 
-                            <div class="form-row">
-                                <label for="s-admin-emails">Mağaza Yöneticileri (her satıra bir e-posta)</label>
-                                <textarea id="s-admin-emails" rows="3" placeholder="magaza.sahibi@gmail.com"></textarea>
+                                <fieldset class="form-section">
+                                    <legend class="form-section__title">Yetkilendirme</legend>
+                                    <div class="form-row">
+                                        <label for="s-admin-emails">Mağaza Yöneticileri</label>
+                                        <textarea id="s-admin-emails" rows="3"
+                                                  placeholder="magaza.sahibi@gmail.com"></textarea>
+                                        <p class="form-hint">
+                                            Her satıra bir Google e-postası. Bu kişiler
+                                            <strong>yalnızca bu mağazanın</strong> ürünlerini, indirimlerini ve
+                                            görünümünü yönetir. Mağaza açamaz, yönetici ekleyemez,
+                                            mağazayı yayından kaldıramaz.
+                                        </p>
+                                    </div>
+                                </fieldset>
+
+                                <div class="form-actions form-actions--sticky">
+                                    <div id="store-form-status" class="form-status" style="display:none;"></div>
+                                    <button type="button" class="btn btn--ghost" id="btn-store-cancel-2">İptal</button>
+                                    <button type="submit" class="btn btn--primary" id="btn-store-save">Kaydet</button>
+                                </div>
+                            </form>
+                        </section>
+
+                        <!-- ============ ARAÇLAR (süper admin) ============ -->
+                        <section class="admin-panel-tab" data-panel="tools" hidden>
+                            <header class="panel-head">
+                                <div>
+                                    <h2 class="panel-head__title">Araçlar</h2>
+                                    <p class="panel-head__sub">Bakım ve tek seferlik işlemler.</p>
+                                </div>
+                            </header>
+
+                            <div class="admin-card">
+                                <h3>Örnek Ürün Yükle</h3>
                                 <p class="form-hint">
-                                    Bu e-postalarla giriş yapanlar <strong>yalnızca bu mağazanın</strong>
-                                    ürünlerini yönetebilir. Mağaza açamaz, yönetici ekleyemez.
+                                    Seçili mağazaya <code>data/dummy-products.json</code> içindeki örnek
+                                    ürünleri ekler. Test amaçlıdır.
                                 </p>
+                                <button type="button" class="btn btn--ghost" id="btn-seed">Örnek Verileri Yükle</button>
                             </div>
 
-                            <!-- Banner (kart arkaplanı) -->
-                            <div class="form-row" id="existing-banners-row" style="display:none;">
-                                <label>Mevcut Banner (kaldırmak için ×'e tıkla)</label>
-                                <div class="img-thumbs" id="existing-banners"></div>
+                            <div class="admin-card">
+                                <h3>Eski Ürünleri Mağazalara Kopyala</h3>
+                                <p class="form-hint">
+                                    Mağazası olmayan (çok mağazalı yapıdan önce eklenmiş) ürünleri
+                                    <strong>tüm aktif mağazalara</strong> kopyalar. Tekrar çalıştırmak
+                                    güvenlidir — daha önce kopyalananlar atlanır. Eski kayıtlar silinmez.
+                                </p>
+                                <button type="button" class="btn btn--ghost" id="btn-migrate">Ürünleri Kopyala</button>
+                                <div id="migrate-status" class="form-status" style="display:none;"></div>
                             </div>
-                            <div class="form-grid">
-                                <div class="form-row">
-                                    <label for="s-banner-file">Banner Yükle</label>
-                                    <input type="file" id="s-banner-file" accept="image/*" multiple>
-                                    <p class="form-hint">Mağaza kartının arkaplanı olur. Geniş (16:10) görsel önerilir.</p>
-                                </div>
-                                <div class="form-row">
-                                    <label for="s-banner-urls">veya Banner URL'leri</label>
-                                    <textarea id="s-banner-urls" rows="2" placeholder="https://..."></textarea>
-                                </div>
-                            </div>
+                        </section>
 
-                            <!-- Logo -->
-                            <div class="form-row" id="existing-logos-row" style="display:none;">
-                                <label>Mevcut Logo (kaldırmak için ×'e tıkla)</label>
-                                <div class="img-thumbs" id="existing-logos"></div>
-                            </div>
-                            <div class="form-grid">
-                                <div class="form-row">
-                                    <label for="s-logo-file">Logo Yükle</label>
-                                    <input type="file" id="s-logo-file" accept="image/*" multiple>
-                                    <p class="form-hint">Kartta ve sipariş PDF'inin başlığında görünür.</p>
-                                </div>
-                                <div class="form-row">
-                                    <label for="s-logo-urls">veya Logo URL'leri</label>
-                                    <textarea id="s-logo-urls" rows="2" placeholder="https://..."></textarea>
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn--primary" id="btn-store-save">Kaydet</button>
-                                <button type="button" class="btn btn--ghost" id="btn-store-cancel" style="display:none;">İptal</button>
-                            </div>
-                            <div id="store-form-status" class="admin-message" style="display:none; text-align:left; padding-left:0;"></div>
-                        </form>
-
-                        <!-- Mağaza listesi -->
-                        <h3 style="margin-bottom: var(--spacing-md);">Mağazalar</h3>
-                        <div class="admin-list" id="store-list"></div>
-                        <div id="store-list-status" class="admin-message">Yükleniyor...</div>
-
-                        <!-- Tek seferlik göç -->
-                        <div class="admin-form" style="margin-top: var(--spacing-md);">
-                            <h3>Eski Ürünleri Mağazalara Kopyala</h3>
-                            <p class="form-hint" style="margin-bottom: var(--spacing-sm);">
-                                Mağazası olmayan (çok mağazalı yapıdan önce eklenmiş) ürünleri
-                                <strong>tüm aktif mağazalara</strong> kopyalar. Tekrar çalıştırmak
-                                güvenlidir — daha önce kopyalanmış ürünler atlanır. Eski kayıtlar silinmez.
-                            </p>
-                            <button type="button" class="btn btn--ghost" id="btn-migrate">Ürünleri Kopyala</button>
-                            <div id="migrate-status" class="admin-message" style="display:none; text-align:left; padding-left:0;"></div>
-                        </div>
-
-                    </div><!-- /#tab-stores -->
-                </div>
+                        </div><!-- /.admin-content -->
+                    </div><!-- /.admin-layout -->
+                </div><!-- /#admin-panel -->
 
             </div>
         </section>

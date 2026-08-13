@@ -13,12 +13,16 @@ import {
     cartCount, cartTotal, buildWhatsappUrl
 } from "./cart.js";
 import { createOrder, buildOrderUrl } from "./order.js";
-import { getImages, coverImage } from "./images.js";
+import { coverImage } from "./images.js";
 import { storeIdFromUrl, getStore, storeBanner, storeLogo } from "./stores.js";
 import { renderStoreCards } from "./store-cards.js";
 import {
     esc, formatPrice, renderProductCards, setupSlides as setupSlidesShared
 } from "./product-card.js";
+import { openProductModal } from "./product-modal.js";
+import { computeDiscount } from "./discount.js";
+import { hasOptions, selectionsLabel } from "./options.js";
+import { validateCustomer, saveCustomer, loadCustomer, formatPhone } from "./customer.js";
 
 // ---------- Mağaza bağlamı ----------
 const STORE_ID = storeIdFromUrl();
@@ -47,16 +51,17 @@ const cartOverlay = document.getElementById("cart-overlay");
 const cartClose = document.getElementById("cart-close");
 const cartItemsEl = document.getElementById("cart-items");
 const cartTotalEl = document.getElementById("cart-total-amount");
+const cartSummaryEl = document.getElementById("cart-summary");
+const cartSubtotalEl = document.getElementById("cart-subtotal-amount");
+const cartDiscountRow = document.getElementById("cart-discount-row");
+const cartDiscountLabel = document.getElementById("cart-discount-label");
+const cartDiscountAmount = document.getElementById("cart-discount-amount");
+const cartNudgeEl = document.getElementById("cart-nudge");
+const custNameEl = document.getElementById("cust-name");
+const custPhoneEl = document.getElementById("cust-phone");
+const custErrorEl = document.getElementById("cust-error");
 const cartCheckout = document.getElementById("cart-checkout");
 const cartClear = document.getElementById("cart-clear");
-
-// Lightbox
-const lbOverlay = document.getElementById("lightbox");
-const lbImg = document.getElementById("lb-img");
-const lbPrev = document.getElementById("lb-prev");
-const lbNext = document.getElementById("lb-next");
-const lbClose = document.getElementById("lb-close");
-const lbCounter = document.getElementById("lb-counter");
 
 // Yerel ürün önbelleği (id -> ürün) — sepete eklerken kullanılır
 const productMap = new Map();
@@ -144,72 +149,62 @@ function renderProducts(products) {
     productMap.clear();
     products.forEach(p => productMap.set(p.id, p));
 
-    renderProductCards(grid, products, { zoomable: true });
+    const cards = renderProductCards(grid, products, { clickable: true });
 
-    // Çoklu görselli kartlar için otomatik slide + lightbox bağla
+    // Çoklu görselli kartlar için otomatik slide
     slideTimer = setupSlidesShared(grid, slideTimer);
-    setupLightbox();
+
+    // Karta tıkla → ürün detay popup'ı (eski davranış: görseli büyüten lightbox)
+    cards.forEach((card, i) => {
+        card.addEventListener("click", (e) => {
+            // "Sepete Ekle" ve diğer etkileşimli öğeler popup'ı açmasın
+            if (e.target.closest("button, a")) return;
+            openDetail(products[i], card);
+        });
+    });
 
     // "Sepete Ekle" butonları
     grid.querySelectorAll("[data-add]").forEach(btn => {
         btn.addEventListener("click", () => {
             const product = productMap.get(btn.dataset.add);
             if (!product) return;
-            // Sepete kapak görseliyle ekle (çoklu görsel → ilk görsel)
-            addToCart(STORE_ID, { ...product, imageUrl: coverImage(product) });
+
+            // Seçimli ürün doğrudan sepete eklenemez — önce renk/boyut seçilmeli.
+            // Karttan eklemeye çalışınca popup açılır, seçim orada yapılır.
+            if (hasOptions(product)) {
+                const card = btn.closest(".product-card");
+                openDetail(product, card);
+                return;
+            }
+
+            addProductToCart(product);
             flashButton(btn);
-            showCartToast(product.name);
         });
     });
 }
 
 let slideTimer = null;
 
-// ---------- Lightbox (görsele tıkla → büyüt + galeri) ----------
-let lbImages = [];
-let lbIndex = 0;
+/**
+ * Ürünü sepete ekler (kapak görseliyle) ve bildirim gösterir.
+ * @param {object} product
+ * @param {object} [selections]  seçimli üründe { color: "Siyah" } gibi
+ */
+function addProductToCart(product, selections = null) {
+    // Sepete kapak görseliyle ekle (çoklu görsel → ilk görsel)
+    addToCart(STORE_ID, { ...product, imageUrl: coverImage(product) }, 1, selections);
+    showCartToast(product.name, selections, product);
+}
 
-function setupLightbox() {
-    grid.querySelectorAll("[data-images]").forEach(media => {
-        media.addEventListener("click", () => {
-            const product = productMap.get(media.dataset.images);
-            const imgs = getImages(product);
-            if (!imgs.length) return;
-            // O an kartta görünen görselden başlat
-            const slides = media.querySelectorAll(".pc-slide");
-            let start = [...slides].findIndex(s => s.classList.contains("active"));
-            openLightbox(imgs, start < 0 ? 0 : start);
-        });
+/** Ürün detay popup'ını, kartta o an görünen görselden başlatarak açar. */
+function openDetail(product, card) {
+    if (!product) return;
+    const slides = card?.querySelectorAll(".pc-slide") || [];
+    const start = [...slides].findIndex(s => s.classList.contains("active"));
+    openProductModal(product, {
+        startIndex: start < 0 ? 0 : start,
+        onAddToCart: addProductToCart
     });
-}
-
-function openLightbox(images, index = 0) {
-    lbImages = images;
-    lbIndex = index;
-    lbImg.src = lbImages[lbIndex];
-    lbOverlay.classList.add("open");
-    // Tek görselse okları gizle
-    const multi = lbImages.length > 1;
-    lbPrev.style.display = multi ? "" : "none";
-    lbNext.style.display = multi ? "" : "none";
-    lbCounter.style.display = multi ? "" : "none";
-    updateLbCounter();
-}
-
-function closeLightbox() {
-    lbOverlay.classList.remove("open");
-    lbImg.src = "";
-}
-
-function lbStep(delta) {
-    if (!lbImages.length) return;
-    lbIndex = (lbIndex + delta + lbImages.length) % lbImages.length;
-    lbImg.src = lbImages[lbIndex];
-    updateLbCounter();
-}
-
-function updateLbCounter() {
-    lbCounter.textContent = `${lbIndex + 1} / ${lbImages.length}`;
 }
 
 // Butonda kısa "Eklendi" geri bildirimi
@@ -230,9 +225,12 @@ function hideCartToast() {
     document.getElementById("cart-toast")?.classList.remove("visible");
 }
 
-function showCartToast(name) {
+function showCartToast(name, selections = null, product = null) {
     // Drawer zaten açıksa toast'a gerek yok
     if (cartDrawer.classList.contains("open")) return;
+
+    // Seçimli üründe hangi varyantın eklendiği görünsün ("Renk: Siyah")
+    const sel = selections ? selectionsLabel(selections, product) : "";
 
     let toast = document.getElementById("cart-toast");
     if (!toast) {
@@ -245,7 +243,7 @@ function showCartToast(name) {
     toast.innerHTML = `
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
              stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        <span><strong>${esc(name)}</strong> sepete eklendi</span>
+        <span><strong>${esc(name)}</strong>${sel ? ` <em>(${esc(sel)})</em>` : ""} sepete eklendi</span>
         <span class="cart-toast__cta">Sepeti aç</span>`;
     toast.classList.add("visible");
 
@@ -273,11 +271,54 @@ function updateBadge() {
     cartBadge.classList.toggle("visible", count > 0);
 }
 
+/**
+ * Ara toplam / indirim / toplam satırlarını günceller.
+ * Mağazanın hiç indirim kuralı yoksa özet gizli kalır — tek satırlık
+ * "Toplam" görünümü korunur.
+ */
+function renderCartSummary(cart) {
+    // Sepetin TAMAMI verilir: adet/çeşit bazlı kurallar tutar dışındaki
+    // ölçüleri de görebilsin (toptan, min adet, min çeşit).
+    const d = computeDiscount(cart, store);
+
+    cartTotalEl.textContent = `${formatPrice(d.total)} TL`;
+
+    // Sepet boşken indirim özeti/teşviki anlamsız
+    const hasRules = !!(d.discount || d.next);
+    if (!cart.length || !hasRules) {
+        cartSummaryEl.style.display = "none";
+        cartNudgeEl.style.display = "none";
+        return;
+    }
+
+    cartSummaryEl.style.display = "";
+    cartSubtotalEl.textContent = `${formatPrice(d.subtotal)} TL`;
+
+    if (d.discount) {
+        cartDiscountRow.style.display = "";
+        // Sepet geneli oran yoksa indirim yalnızca toptan satırlardan gelir
+        cartDiscountLabel.textContent = d.percent
+            ? `İndirim (%${d.percent})`
+            : "Toptan alış indirimi";
+        cartDiscountAmount.textContent = `−${formatPrice(d.discount)} TL`;
+    } else {
+        cartDiscountRow.style.display = "none";
+    }
+
+    // Teşvik metni artık kural türüne göre discount.js'te üretiliyor
+    if (d.nextLabel) {
+        cartNudgeEl.style.display = "";
+        cartNudgeEl.textContent = d.nextLabel;
+    } else {
+        cartNudgeEl.style.display = "none";
+    }
+}
+
 // Sepet içeriğini render et
 function renderCart() {
     const cart = getCart(STORE_ID);
     updateBadge();
-    cartTotalEl.textContent = `${formatPrice(cartTotal(STORE_ID))} TL`;
+    renderCartSummary(cart);
 
     if (cart.length === 0) {
         cartItemsEl.innerHTML = `<p class="cart-empty">Sepetiniz boş.</p>`;
@@ -297,11 +338,16 @@ function renderCart() {
         const img = item.imageUrl
             ? `<img class="cart-item__img" src="${esc(item.imageUrl)}" alt="${esc(item.name)}">`
             : `<div class="cart-item__img"></div>`;
+        // Seçimli satırlarda varyant görünsün ("Renk: Siyah")
+        const product = productMap.get(item.productId || item.id);
+        const sel = item.selections ? selectionsLabel(item.selections, product) : "";
+
         return `
             <div class="cart-item">
                 ${img}
                 <div class="cart-item__info">
                     <div class="cart-item__name">${esc(item.name)}</div>
+                    ${sel ? `<div class="cart-item__sel">${esc(sel)}</div>` : ""}
                     <div class="cart-item__price">${formatPrice(item.price)} TL</div>
                     <div class="qty-control">
                         <button data-dec="${esc(item.id)}" aria-label="Azalt">−</button>
@@ -328,6 +374,26 @@ function changeQty(id, delta) {
     setQty(STORE_ID, id, item.qty + delta);
 }
 
+/** Müşteri formu hata mesajı (boş metin → gizler). */
+function showCustomerError(msg) {
+    if (!custErrorEl) return;
+    custErrorEl.textContent = msg;
+    custErrorEl.style.display = msg ? "" : "none";
+    custNameEl?.classList.toggle("invalid", !!msg);
+    custPhoneEl?.classList.toggle("invalid", !!msg);
+}
+
+/** Daha önce sipariş vermiş kullanıcının bilgilerini forma doldurur. */
+function prefillCustomer() {
+    const saved = loadCustomer();
+    if (!saved) return;
+    if (custNameEl && !custNameEl.value) custNameEl.value = saved.name || "";
+    // Kayıtlı numara "5354101826" biçiminde; okunur hâle getir
+    if (custPhoneEl && !custPhoneEl.value && saved.phone) {
+        custPhoneEl.value = formatPhone(saved.phone);
+    }
+}
+
 // ---------- Olaylar ----------
 function wireCartEvents() {
     cartToggle.addEventListener("click", () => {
@@ -347,6 +413,12 @@ function wireCartEvents() {
         clearCart(STORE_ID);
     });
 
+    // Kullanıcı yazmaya başlayınca hata mesajı kalksın
+    [custNameEl, custPhoneEl].forEach(el =>
+        el?.addEventListener("input", () => showCustomerError("")));
+
+    prefillCustomer();
+
     // Sepet her değiştiğinde drawer + rozeti tazele
     window.addEventListener("cart:change", renderCart);
     // Diğer sekmelerden gelen değişiklikler (localStorage) — sadece BU mağazanınki
@@ -356,19 +428,30 @@ function wireCartEvents() {
 }
 
 async function checkout() {
+    // Sipariş sahibi bilgileri — satıcı müşteriye ulaşabilmeli.
+    // Doğrulama sipariş YAZILMADAN önce yapılır ki eksik bilgiyle kayıt oluşmasın.
+    const { ok, error, customer } = validateCustomer(custNameEl?.value, custPhoneEl?.value);
+    if (!ok) {
+        showCustomerError(error);
+        (String(custNameEl.value || "").trim().includes(" ") ? custPhoneEl : custNameEl).focus();
+        return;
+    }
+    showCustomerError("");
+    saveCustomer(customer);   // sonraki siparişte hazır gelsin
+
     const original = cartCheckout.innerHTML;
     cartCheckout.dataset.busy = "1";
     cartCheckout.style.pointerEvents = "none";
     cartCheckout.textContent = "Sipariş hazırlanıyor...";
 
     try {
-        // 1) Siparişi Firestore'a yaz, key al (mağaza bilgisiyle birlikte)
-        const { key } = await createOrder(store);
+        // 1) Siparişi Firestore'a yaz, key al (mağaza + müşteri bilgisiyle)
+        const { key } = await createOrder(store, customer);
         // 2) Site içi sipariş sayfası linki üret
         const orderUrl = buildOrderUrl(key);
         // 3) WhatsApp metnini sepet DOLUYKEN üret (temizleme öncesi!)
         //    Numara mağazadan gelir; tanımsızsa burada hata fırlar ve sepet KORUNUR.
-        const waUrl = buildWhatsappUrl(orderUrl, store);
+        const waUrl = buildWhatsappUrl(orderUrl, store, customer);
         // 4) Sepeti temizle (sipariş kaydedildi)
         clearCart(STORE_ID);
         closeCart();
@@ -383,22 +466,6 @@ async function checkout() {
         cartCheckout.style.pointerEvents = "";
     }
 }
-
-// ---------- Lightbox olayları ----------
-lbClose.addEventListener("click", closeLightbox);
-lbPrev.addEventListener("click", (e) => { e.stopPropagation(); lbStep(-1); });
-lbNext.addEventListener("click", (e) => { e.stopPropagation(); lbStep(1); });
-// Arka plana (resmin dışına) tıklayınca kapat
-lbOverlay.addEventListener("click", (e) => {
-    if (e.target === lbOverlay) closeLightbox();
-});
-// Klavye: Esc kapat, ←/→ gezin
-document.addEventListener("keydown", (e) => {
-    if (!lbOverlay.classList.contains("open")) return;
-    if (e.key === "Escape") closeLightbox();
-    else if (e.key === "ArrowLeft") lbStep(-1);
-    else if (e.key === "ArrowRight") lbStep(1);
-});
 
 // ============================================================================
 // Başlangıç
